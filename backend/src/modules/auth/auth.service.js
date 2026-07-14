@@ -32,7 +32,7 @@ const buildSafeUser = (user) => {
     name: user.name,
     email: user.email,
     phone: user.phone,
-    role: user.role,
+    role: user.role, // <-- Verifica che ci sia questa riga
     reliabilityScore: user.reliabilityScore,
     preferredRole: user.preferredRole,
     isPremium: user.isPremium,
@@ -48,21 +48,29 @@ const register = async (userData) => {
 
   const passwordHash = await bcrypt.hash(userData.password, 10);
 
+  // --- MODIFICA CHIRURGICA ---
+  // Se userData.role arriva dal frontend ed è 'CENTER_OWNER', lo usiamo.
+  // Altrimenti, per sicurezza, forziamo 'USER' per evitare che chiunque diventi ADMIN.
+  let roleToAssign = "USER";
+  if (userData.role === "CENTER_OWNER") {
+      roleToAssign = "CENTER_OWNER";
+  }
+
   const user = await authRepository.createUser({
     name: userData.name,
     email: userData.email,
     phone: userData.phone,
     passwordHash,
+    role: roleToAssign, // <--- Passiamo il ruolo corretto qui
   });
 
+  // ... (il resto della funzione register rimane uguale: email, token, etc.)
   let welcomeEmailSent = false;
-
   try {
     const emailResult = await emailService.sendWelcomeEmail({
       to: user.email,
       name: user.name,
     });
-
     welcomeEmailSent = emailResult.sent === true;
   } catch (error) {
     console.error("Errore invio email di benvenuto:", error.message);

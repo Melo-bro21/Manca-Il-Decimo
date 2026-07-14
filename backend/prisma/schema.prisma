@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,10 +13,14 @@ model User {
  name             String?   
  phone            String?
  passwordHash     String 
- role             String    @default("USER")
+ role             String    @default("USER") // Può essere: "USER", "ADMIN", "CENTER_OWNER"
  reliabilityScore Int       @default(100)
  preferredRole    String?
  isPremium        Boolean   @default(false)
+
+ // --- CAMPI PER IL MERCATO (STRIPE E CENTRI) ---
+ stripeCustomerId String?   @unique // L'ID del portafoglio reale dell'utente su Stripe
+ ownedCenters     SportsCenter[] @relation("CenterOwner")
 
  createdMatches   Match[]
  bookings         Booking[]
@@ -53,9 +57,16 @@ model SportsCenter {
  city             String
  phone            String?
 
- fields           Field[] 
+ // --- CAMPI PER IL MERCATO (GEOLOCALIZZAZIONE E PROPRIETÀ) ---
+ latitude         Float?    // Coordinata GPS (Es. 38.1156879)
+ longitude        Float?    // Coordinata GPS (Es. 13.3612671)
+ 
+ ownerId          Int?
+ owner            User?     @relation("CenterOwner", fields: [ownerId], references: [id])
+ 
+ stripeAccountId  String?   @unique // L'ID Stripe Connect per inviare i soldi al centro
 
- distanceKm       Float     @default(0)
+ fields           Field[] 
 
  createdAt        DateTime  @default(now())
  updatedAt        DateTime  @updatedAt
@@ -184,6 +195,9 @@ model WalletTransaction {
   amount    Int
   type      String
   reason    String?
+  
+  // --- CAMPO PER IL MERCATO (RICEVUTE STRIPE) ---
+  stripePaymentIntentId String?  @unique
   
   walletId  Int
   wallet    Wallet   @relation(fields: [walletId], references: [id])

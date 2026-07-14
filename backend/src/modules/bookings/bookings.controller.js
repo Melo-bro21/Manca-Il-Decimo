@@ -208,6 +208,23 @@ async function getJoinSummary(req, res, next) {
   }
 }
 
+// Aggiungi questo metodo nel tuo bookings.controller.js
+async function createPaymentIntent(req, res, next) {
+  try {
+    const { userId } = req.user; // Assumendo che tu abbia un middleware di autenticazione
+    const { bookingId } = req.params;
+
+    const paymentData = await bookingsService.createStripePaymentIntent({
+      userId,
+      bookingId,
+    });
+
+    res.status(200).json(paymentData);
+  } catch (error) {
+    next(error); // Il tuo gestore errori globale catturerà l'errore (es. se il booking non esiste)
+  }
+}
+
 module.exports = {
   getJoinSummary,
   joinMatch,
@@ -220,4 +237,5 @@ module.exports = {
   leaveBooking,
   requestLateCancellation,
   removeGuestFromMatch,
+  createPaymentIntent, // Esportiamo la nuova funzione per creare un PaymentIntent
 };

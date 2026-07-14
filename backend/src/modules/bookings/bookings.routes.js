@@ -85,4 +85,11 @@ router.delete(
   bookingsController.removeGuestFromMatch
 );
 
+router.post(
+  "/bookings/:id/create-payment-intent",
+  authMiddleware,
+  validate(bookingIdParamSchema),
+  bookingsController.createPaymentIntent
+);
+
 module.exports = router;

@@ -112,7 +112,8 @@ async function main() {
       address: 'Via Tuscolana 120',
       city: 'Milano',
       phone: '0612345678',
-      distanceKm: 3.2,
+      latitude: 38.1156879,
+      longitude: 13.3612671,
     },
   });
 
@@ -122,7 +123,8 @@ async function main() {
       address: 'Via Appia 45',
       city: 'Milano',
       phone: '0698765432',
-      distanceKm: 7.2,
+      latitude: 38.1156879,
+      longitude: 13.3612671,
     },
   });
 
@@ -132,7 +134,8 @@ async function main() {
       address: 'Via Torino 22',
       city: 'Milano',
       phone: '0245123456',
-      distanceKm: 2.1,
+      latitude: 38.1156879,
+      longitude: 13.3612671,
     },
   });
 
@@ -142,7 +145,8 @@ async function main() {
       address: 'Alzaia Naviglio Grande 18',
       city: 'Milano',
       phone: '0287654321',
-      distanceKm: 4.5,
+      latitude: 38.1156879,
+      longitude: 13.3612671,
     },
   });
 
@@ -152,7 +156,8 @@ async function main() {
       address: 'Viale Sarca 95',
       city: 'Milano',
       phone: '0299988877',
-      distanceKm: 6.3,
+      latitude: 38.1156879,
+      longitude: 13.3612671,
     },
   });
 

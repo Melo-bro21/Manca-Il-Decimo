@@ -42,8 +42,28 @@ async function getFieldsBySportsCenterId(req,res,next) {
  }  
 }
 
+async function createSportsCenter(req, res, next) {
+  try {
+    // Chirurgico: forziamo l'assegnazione del proprietario
+    const centerData = {
+      ...req.body,
+      ownerId: req.user.id 
+    };
+    
+    const newCenter = await sportsCenterService.createSportsCenter(centerData);
+
+    res.status(201).json({
+      message: 'Centro sportivo creato con successo',
+      data: newCenter,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports= {
     getAllSportsCenter,
     getSportsCenterById,
     getFieldsBySportsCenterId,
+    createSportsCenter,
 };

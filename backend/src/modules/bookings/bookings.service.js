@@ -5,6 +5,7 @@ const waitlistService = require("../waitlist/waitlist.service");
 const { AppError } = require("../../shared/errors");
 const { prisma } = require("../../shared/prisma");
 const suspensionService = require("../../shared/suspension.service");
+const stripeService = require('../../shared/stripe.service');
 
 const MAX_GOALKEEPERS_PER_MATCH = 2;
 const LATE_CANCEL_PENALTY_POINTS = 3;
@@ -401,15 +402,17 @@ async function joinMatch({ userId, matchId }) {
       },
     });
 
-    await tx.match.update({
-      where: {
-        id: matchId,
-      },
-      data: {
-        currentPlayers: newCurrentPlayers,
-        status: newStatus,
-      },
-    });
+    // --- CODICE NUOVO (SICURO E ATOMICO) ---
+const updatedMatch = await tx.match.update({
+  where: {
+    id: matchId,
+    currentPlayers: { lt: match.maxPlayers } // <-- IL TRUCCO: Questo check avviene direttamente nel DB
+  },
+  data: {
+    currentPlayers: { increment: 1 }, // <-- Incrementa di 1 in modo sicuro
+    status: (match.currentPlayers + 1) >= match.maxPlayers ? "FULL" : "OPEN"
+  },
+});
 
     return booking;
   });
@@ -1106,6 +1109,44 @@ async function getJoinSummary({ userId, matchId }) {
   };
 }
 
+/**
+ * Crea un PaymentIntent per Stripe.
+ * Restituisce il client_secret che servirà al frontend per mostrare il form di pagamento.
+ */
+async function createStripePaymentIntent({ userId, bookingId }) {
+  // 1. Recuperiamo la prenotazione
+  const booking = await bookingsRepository.findBookingById(bookingId);
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
+
+  // 2. Controllo di sicurezza: l'utente deve essere il proprietario del booking
+  if (booking.userId !== userId) {
+    throw new AppError("Non puoi pagare la prenotazione di un altro utente", 403);
+  }
+
+  // 3. Verifichiamo che il pagamento sia possibile (stessi controlli di prima)
+  if (booking.status !== "ACTIVE") {
+    throw new AppError("Booking non attivo", 400);
+  }
+
+  if (booking.paymentStatus === "PAID") {
+    throw new AppError("Booking già pagato", 400);
+  }
+
+  // 4. Calcoliamo l'importo in centesimi (Stripe vuole i centesimi!)
+  const amountInCents = Math.round(booking.match.pricePerPlayer * 100);
+
+  // 5. Chiamiamo il nostro servizio Stripe
+  const paymentIntent = await stripeService.createPaymentIntent(amountInCents, bookingId);
+
+  // 6. Restituiamo il clientSecret al frontend
+  return {
+    clientSecret: paymentIntent.client_secret,
+  };
+}
+
 module.exports = {
   getJoinSummary,
   joinMatch,
@@ -1118,4 +1159,5 @@ module.exports = {
   leaveBooking,
   requestLateCancellation,
   removeGuestFromMatch,
+  createStripePaymentIntent,
 };
