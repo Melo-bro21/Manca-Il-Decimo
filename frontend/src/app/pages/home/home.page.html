@@ -1,0 +1,233 @@
+<ion-content fullscreen class="home-page">
+  <main class="app-page-container home-container">
+    <header class="home-header">
+      <div>
+        <p class="home-eyebrow">Manca il Decimo?</p>
+
+        <h1>Ciao! <span>👋</span></h1>
+
+        <span class="home-subtitle">
+          Trova una partita, crea un gruppo o scegli un campo vicino a te.
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="notification-button"
+        aria-label="Notifiche"
+        (click)="openNotifications()"
+      >
+        <ion-icon name="notifications-outline"></ion-icon>
+
+        <span
+          *ngIf="notificationsCount > 0"
+          class="notification-badge"
+        >
+          {{ notificationsCount > 9 ? '9+' : notificationsCount }}
+        </span>
+      </button>
+    </header>
+
+    <section class="home-hero-card">
+      <div class="hero-copy">
+        <span class="hero-pill">
+          <ion-icon name="football-outline"></ion-icon>
+          Calcetto facile
+        </span>
+
+        <h2>
+          Organizza o trova la partita <strong>giusta.</strong>
+        </h2>
+
+        <p>
+          Crea una partita, trova un campo oppure entra in una sfida già
+          disponibile vicino a te.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="hero-primary-button"
+          (click)="goToCreateMatch()"
+        >
+          <ion-icon name="add-outline"></ion-icon>
+          Crea partita
+        </button>
+
+        <button
+          type="button"
+          class="hero-secondary-button"
+          (click)="goToFindField()"
+        >
+          <ion-icon name="search-outline"></ion-icon>
+          Trova campo
+        </button>
+      </div>
+    </section>
+
+    <section class="home-location-section">
+      <div>
+        <p class="home-section-title">
+          <ion-icon name="football-outline"></ion-icon>
+          Partite vicine a te
+        </p>
+
+        <div class="home-location">
+          <ion-icon name="location-outline"></ion-icon>
+          <span>Milano, {{ distanceLabel }}</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="change-location-button"
+        (click)="selectDistanceFilter('ALL')"
+      >
+        Vedi tutte
+        <span>→</span>
+      </button>
+    </section>
+
+    <section class="home-filters" aria-label="Filtri data partite">
+      <button
+        type="button"
+        *ngFor="let filter of filters"
+        class="filter-chip"
+        [class.active]="selectedFilter === filter"
+        (click)="selectFilter(filter)"
+      >
+        <ion-icon
+          *ngIf="filter === 'Entro 7 giorni'"
+          name="calendar-outline"
+        ></ion-icon>
+        {{ filter }}
+      </button>
+    </section>
+
+    <section class="home-filters" aria-label="Filtri distanza partite">
+      <button
+        type="button"
+        *ngFor="let distanceFilter of distanceFilters"
+        class="filter-chip"
+        [class.active]="selectedDistanceFilter === distanceFilter.value"
+        (click)="selectDistanceFilter(distanceFilter.value)"
+      >
+        <ion-icon
+          *ngIf="distanceFilter.value === 5"
+          name="location-outline"
+        ></ion-icon>
+        {{ distanceFilter.label }}
+      </button>
+    </section>
+
+    <section
+      *ngIf="
+        !isLoadingMatches &&
+        !matchesErrorMessage &&
+        almostFullMatches.length > 0
+      "
+      class="almost-full-section"
+      aria-label="Partite quasi piene"
+    >
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">
+            <ion-icon name="flame-outline"></ion-icon>
+            Da non perdere
+          </p>
+          <h2>Partite quasi piene</h2>
+        </div>
+      </div>
+
+      <div class="almost-full-list">
+        <button
+          type="button"
+          *ngFor="let match of almostFullMatches"
+          class="almost-full-card"
+          (click)="openMatchDetail(match.id)"
+        >
+          <div>
+            <strong>{{ match.centerName }}</strong>
+            <small>
+              {{ match.dayLabel }} · {{ match.time }} · {{ match.type }}
+            </small>
+          </div>
+
+          <span>{{ match.availableSpots }} posti</span>
+        </button>
+      </div>
+    </section>
+
+    <section
+      *ngIf="isLoadingMatches"
+      class="app-empty-state"
+    >
+      <h3>Caricamento partite...</h3>
+      <p>Stiamo recuperando le partite disponibili dal backend.</p>
+    </section>
+
+    <section
+      *ngIf="!isLoadingMatches && matchesErrorMessage"
+      class="app-empty-state"
+    >
+      <h3>Errore caricamento</h3>
+      <p>{{ matchesErrorMessage }}</p>
+    </section>
+
+    <section
+      *ngIf="
+        !isLoadingMatches &&
+        !matchesErrorMessage &&
+        visibleMatches.length > 0;
+        else emptyMatches
+      "
+      class="matches-section"
+      aria-label="Lista partite disponibili"
+    >
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Disponibili ora</p>
+          <h2>Partite consigliate</h2>
+        </div>
+      </div>
+
+      <div class="matches-list">
+        <app-match-card
+          *ngFor="let match of visibleMatches"
+          [match]="match"
+          (cardClick)="openMatchDetail($event)"
+        ></app-match-card>
+      </div>
+    </section>
+
+    <ng-template #emptyMatches>
+      <section
+        *ngIf="!isLoadingMatches && !matchesErrorMessage"
+        class="app-empty-state home-empty-state"
+      >
+        <div class="empty-illustration">
+          <span>⚽</span>
+        </div>
+
+        <div class="empty-copy">
+          <h3>Nessuna partita disponibile</h3>
+
+          <p>
+            Non ci sono partite per questo filtro. Prova a cambiare distanza,
+            giorno oppure torna più tardi.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="empty-action-button"
+          (click)="goToCreateMatch()"
+        >
+          <ion-icon name="add-outline"></ion-icon>
+          Crea tu una partita
+        </button>
+      </section>
+    </ng-template>
+  </main>
+</ion-content>

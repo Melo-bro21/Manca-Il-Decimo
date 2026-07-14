@@ -1,0 +1,351 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User { 
+ id               Int       @id @default(autoincrement())
+ email            String    @unique
+ name             String?   
+ phone            String?
+ passwordHash     String 
+ role             String    @default("USER")
+ reliabilityScore Int       @default(100)
+ preferredRole    String?
+ isPremium        Boolean   @default(false)
+
+ createdMatches   Match[]
+ bookings         Booking[]
+
+ wallet           Wallet?
+
+ penalties        Penalty[]
+
+ waitlistEntries  WaitlistEntry[]
+
+ joinRequests     MatchJoinRequest[]
+
+ notifications    Notification[]
+
+ passwordResetTokens PasswordResetToken[]
+
+ suspendedUntil      DateTime?
+ suspensionReason    String?
+
+ reportsMade         PlayerReport[] @relation("ReportsMade")
+ reportsReceived     PlayerReport[] @relation("ReportsReceived")
+ reportsResolved     PlayerReport[] @relation("ReportsResolved")
+ suspensionAppeals         SuspensionAppeal[] @relation("SuspensionAppeals")
+ suspensionAppealsResolved SuspensionAppeal[] @relation("SuspensionAppealsResolved")
+
+ createdAt DateTime  @default(now())
+ updatedAt DateTime  @updatedAt
+}
+
+model SportsCenter {
+ id               Int       @id @default(autoincrement()) 
+ name             String
+ address          String
+ city             String
+ phone            String?
+
+ fields           Field[] 
+
+ distanceKm       Float     @default(0)
+
+ createdAt        DateTime  @default(now())
+ updatedAt        DateTime  @updatedAt
+}
+
+model Field {
+ id               Int           @id @default(autoincrement())
+ name             String
+ sportType        String
+ size             String
+ surface          String
+ indoor           Boolean       @default(false)
+ pricePerHour     Int
+
+ sportsCenterId   Int
+ sportsCenter     SportsCenter  @relation(fields: [sportsCenterId], references: [id])
+
+ matches          Match[]
+
+ createdAt        DateTime      @default(now())
+ updatedAt        DateTime      @updatedAt
+}
+
+model Match {
+ id                  Int              @id @default(autoincrement())
+
+ title               String 
+ description         String?
+
+ startsAt            DateTime
+ durationMinutes     Int
+
+ maxPlayers          Int
+ currentPlayers      Int         @default(1)
+
+ pricePerPlayer      Int
+ depositAmount       Int
+ 
+ status              String      @default("OPEN")
+
+ onlyReliableUsers   Boolean     @default(false)
+ minReliabilityScore Int?
+ requiresApproval    Boolean     @default(false)
+
+ creatorId          Int 
+ creator            User        @relation(fields: [creatorId], references: [id])
+
+ fieldId            Int 
+ field              Field       @relation(fields: [fieldId], references: [id])
+
+ bookings            Booking[]
+
+ guests              MatchGuest[] 
+
+ penalties           Penalty[]
+
+ waitlistEntries     WaitlistEntry[]
+
+ joinRequests        MatchJoinRequest[]
+
+ notifications       Notification[]
+
+ playerReports       PlayerReport[]
+
+ createdAt          DateTime    @default(now())
+ updatedAt          DateTime    @updatedAt
+}
+
+model Booking {
+ id                 Int         @id @default(autoincrement())
+
+ status             String      @default("ACTIVE")
+
+ paymentMethod      String
+ paymentStatus      String      @default("PENDING")
+
+ depositStatus      String      @default("HELD")
+ attendanceStatus   String      @default("NOT_CONFIRMED")
+
+ userId             Int 
+ user               User        @relation(fields: [userId], references: [id])
+
+ matchId            Int
+ match              Match       @relation(fields: [matchId], references: [id])
+ 
+ penalties          Penalty[]
+
+ notifications      Notification[]
+ 
+ createdAt          DateTime    @default(now())
+ updatedAt          DateTime    @updatedAt
+
+ @@unique([userId, matchId])
+}
+
+model MatchGuest {
+  id                Int         @id @default(autoincrement())
+ 
+  name              String
+  preferredRole     String
+
+  matchId           Int
+  match             Match       @relation(fields: [matchId], references: [id])
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Wallet {
+  id        Int      @id @default(autoincrement())
+
+  balance   Int      @default(0)
+
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  transactions WalletTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id        Int      @id @default(autoincrement())
+
+  amount    Int
+  type      String
+  reason    String?
+  
+  walletId  Int
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Penalty {
+  id        Int      @id @default(autoincrement())
+
+  type      String
+  points    Int
+  reason    String?
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  matchId   Int?
+  match     Match?   @relation(fields: [matchId], references: [id])
+
+  bookingId Int?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+}
+
+model WaitlistEntry {
+  id                Int           @id @default(autoincrement())
+
+  status            String        @default("WAITING")
+  position          Int
+
+  reservedExpiresAt DateTime?
+
+  userId            Int
+  user              User          @relation(fields: [userId], references: [id])
+
+  matchId           Int
+  match             Match         @relation(fields: [matchId], references: [id])
+
+  notifications     Notification[]
+
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@unique([userId, matchId])
+}
+
+model MatchJoinRequest {
+  id     Int    @id @default(autoincrement())
+
+  status String @default("PENDING")
+
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+
+  matchId Int
+  match   Match  @relation(fields: [matchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, matchId])
+}
+
+model Notification {
+  id      Int     @id @default(autoincrement())
+
+  type    String
+  title   String
+  message String
+  read    Boolean @default(false)
+
+  userId  Int
+  user    User    @relation(fields: [userId], references: [id])
+
+  matchId Int?
+  match   Match?  @relation(fields: [matchId], references: [id])
+
+  bookingId Int?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  penaltyId Int?
+  penalty   Penalty? @relation(fields: [penaltyId], references: [id])
+
+  waitlistEntryId Int?
+  waitlistEntry   WaitlistEntry? @relation(fields: [waitlistEntryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlayerReport {
+  id          Int      @id @default(autoincrement())
+
+  reason      String
+  description String?
+
+  status      String   @default("OPEN")
+  adminNote   String?
+
+  suspensionDays Int?
+
+  matchId     Int
+  match       Match    @relation(fields: [matchId], references: [id])
+
+  reporterId  Int
+  reporter    User     @relation("ReportsMade", fields: [reporterId], references: [id])
+
+  reportedUserId Int
+  reportedUser   User  @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+
+  resolvedByAdminId Int?
+  resolvedByAdmin   User? @relation("ReportsResolved", fields: [resolvedByAdminId], references: [id])
+
+  suspensionAppeals SuspensionAppeal[]
+
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([matchId, reporterId, reportedUserId])
+}
+
+model SuspensionAppeal {
+  id        Int    @id @default(autoincrement())
+
+  message   String
+  status    String @default("OPEN")
+  adminNote String?
+
+  userId Int
+  user   User @relation("SuspensionAppeals", fields: [userId], references: [id])
+
+  playerReportId Int?
+  playerReport   PlayerReport? @relation(fields: [playerReportId], references: [id])
+
+  resolvedByAdminId Int?
+  resolvedByAdmin   User? @relation("SuspensionAppealsResolved", fields: [resolvedByAdminId], references: [id])
+
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

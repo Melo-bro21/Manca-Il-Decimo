@@ -1,0 +1,44 @@
+<ion-content fullscreen class="welcome-page">
+  <main class="welcome-shell">
+    <section class="welcome-hero">
+      <h1>
+        <span>Manca il</span>
+        <strong>Decimo ⚽?</strong>
+      </h1>
+
+      <p class="welcome-subtitle">
+        Trova la partita, partecipa, rispetta.
+      </p>
+
+      <p class="welcome-tagline">
+        Il decimo sei tu.
+      </p>
+    </section>
+
+    <section class="welcome-actions">
+      <button
+        type="button"
+        class="welcome-button welcome-button-primary"
+        (click)="goToLogin()"
+      >
+        Accedi
+      </button>
+
+      <button
+        type="button"
+        class="welcome-button welcome-button-secondary"
+        (click)="goToRegister()"
+      >
+        Registrati
+      </button>
+
+      <button
+        type="button"
+        class="guest-button"
+        (click)="continueAsGuest()"
+      >
+        Continua come ospite
+      </button>
+    </section>
+  </main>
+</ion-content>

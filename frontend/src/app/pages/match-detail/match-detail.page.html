@@ -1,0 +1,323 @@
+<ion-content fullscreen class="match-detail-page">
+  <main class="match-detail-shell">
+    <header class="match-detail-header">
+      <button
+        type="button"
+        class="back-button"
+        (click)="goBack()"
+        aria-label="Torna alla Home"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>{{ match.title }}</h1>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <section class="match-detail-layout">
+      <div class="match-left-column">
+        <section class="match-summary-card">
+          <div class="summary-bg-circle"></div>
+
+          <div class="summary-meta-grid">
+            <span>
+              <ion-icon name="calendar-outline"></ion-icon>
+              {{ match.dayLabel }}
+            </span>
+
+            <span>
+              <ion-icon name="time-outline"></ion-icon>
+              {{ match.time }}
+            </span>
+          </div>
+
+          <div class="summary-main-line">
+            <ion-icon name="football-outline"></ion-icon>
+            <strong>{{ match.type }}</strong>
+          </div>
+
+          <div class="summary-location">
+            <ion-icon name="location-outline"></ion-icon>
+
+            <div>
+              <strong>{{ match.centerName }}</strong>
+              <small>{{ match.address }}</small>
+            </div>
+          </div>
+
+          <div class="summary-bottom-row">
+            <span class="spots-pill">
+              {{
+                match.status === 'FULL'
+                  ? 'Partita completa'
+                  : match.availableSpots + ' posti disponibili'
+              }}
+            </span>
+
+            <span class="deposit-box">
+              <strong>{{ match.deposit }}€</strong>
+              <small>cauzione</small>
+            </span>
+          </div>
+        </section>
+
+        <section class="detail-panel description-card">
+          <h2>Descrizione</h2>
+
+          <p>
+            {{ match.description }}
+          </p>
+
+          <div class="organizer-row">
+            <div class="organizer-avatar">
+              {{ match.organizerName.charAt(0) }}
+            </div>
+
+            <div>
+              <span>Organizzatore</span>
+              <strong>{{ match.organizerName }}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="match-right-column">
+        <section class="detail-panel roles-card">
+          <div class="card-header">
+            <h2>Ruoli presenti</h2>
+            <span>{{ match.participantsLabel }}</span>
+          </div>
+
+          <div class="roles-grid">
+            <article
+              class="role-box"
+              *ngFor="let role of match.roles"
+              [class.role-danger]="role.danger"
+            >
+              <ion-icon [name]="role.icon"></ion-icon>
+              <span>{{ role.label }}</span>
+              <strong>{{ role.value }}</strong>
+            </article>
+          </div>
+
+          <div class="warnings-list">
+            <article
+              class="warning-row"
+              *ngFor="let warning of match.warnings"
+              [class.warning-danger]="warning.type === 'danger'"
+              [class.warning-normal]="warning.type === 'warning'"
+            >
+              <ion-icon
+                [name]="warning.type === 'danger' ? 'alert-circle-outline' : 'warning-outline'"
+              ></ion-icon>
+
+              <div>
+                <strong>{{ warning.title }}</strong>
+                <span>{{ warning.description }}</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-panel info-card">
+          <h2>Informazioni</h2>
+
+          <div class="info-list">
+            <div class="info-row">
+              <span>
+                <ion-icon name="people-outline"></ion-icon>
+                Partecipanti
+              </span>
+
+              <strong>{{ match.participantsLabel }}</strong>
+            </div>
+
+            <div class="info-row">
+              <span>
+                <ion-icon name="football-outline"></ion-icon>
+                Posti disponibili
+              </span>
+
+              <strong>{{ match.availableSpots }}</strong>
+            </div>
+
+            <div class="info-row">
+              <span>
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                Tipo iscrizione
+              </span>
+
+              <strong>{{ match.registrationLabel }}</strong>
+            </div>
+
+            <div class="info-row" *ngIf="match.onlyReliableUsers">
+              <span>
+                <ion-icon name="star-outline"></ion-icon>
+                Affidabilità minima
+              </span>
+
+              <strong>{{ match.minReliabilityScore || 0 }}</strong>
+            </div>
+
+            <div class="info-row">
+              <span>
+                <ion-icon name="time-outline"></ion-icon>
+                Stato
+              </span>
+
+              <strong>{{ match.statusLabel }}</strong>
+            </div>
+
+            <div class="info-row">
+              <span>
+                <ion-icon name="time-outline"></ion-icon>
+                Durata
+              </span>
+
+              <strong>{{ match.duration }}</strong>
+            </div>
+
+            <div class="info-row">
+              <span>
+                <ion-icon name="football-outline"></ion-icon>
+                Campo
+              </span>
+
+              <strong>{{ match.fieldType }}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-panel approval-card" *ngIf="match.requiresApproval">
+          <div class="approval-icon">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+          </div>
+
+          <div class="approval-content">
+            <div class="approval-title-row">
+              <h2>Partita ad invito</h2>
+              <span>Premium</span>
+            </div>
+
+            <p *ngIf="!isCreator">
+              Per partecipare devi inviare una richiesta. L’organizzatore potrà
+              accettarla o rifiutarla.
+            </p>
+
+            <p *ngIf="isCreator">
+              Hai creato una partita ad invito. Puoi gestire le richieste
+              ricevute dagli utenti interessati.
+            </p>
+          </div>
+        </section>
+
+        <section class="detail-panel approval-card" *ngIf="match.onlyReliableUsers">
+          <div class="approval-icon">
+            <ion-icon name="star-outline"></ion-icon>
+          </div>
+
+          <div class="approval-content">
+            <div class="approval-title-row">
+              <h2>Filtro affidabilità</h2>
+              <span>Premium</span>
+            </div>
+
+            <p>
+              Questa partita è riservata agli utenti con almeno
+              <strong>{{ match.minReliabilityScore || 0 }}</strong>
+              punti affidabilità.
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="detail-panel approval-card"
+          *ngIf="isCreator && !match.requiresApproval"
+        >
+          <div class="approval-icon">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+
+          <div class="approval-content">
+            <div class="approval-title-row">
+              <h2>Partita creata da te</h2>
+              <span>Owner</span>
+            </div>
+
+            <p>
+              Questa partita è stata organizzata dal tuo account. Puoi gestire i
+              partecipanti dalla pagina dedicata.
+            </p>
+          </div>
+        </section>
+
+        <div class="feedback-box success-box" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="feedback-box error-box" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <section class="match-actions">
+          <button
+            *ngIf="canJoinMatch"
+            type="button"
+            class="join-button"
+            (click)="goToCheckout()"
+          >
+            Partecipa alla partita
+          </button>
+
+          <button
+            *ngIf="canJoinWaitlist"
+            type="button"
+            class="join-button"
+            [disabled]="isWaitlistLoading"
+            (click)="joinWaitlist()"
+          >
+            {{ isWaitlistLoading ? 'Inserimento in lista...' : 'Entra in lista d’attesa' }}
+          </button>
+
+          <button
+            *ngIf="canSendJoinRequest"
+            type="button"
+            class="join-button"
+            [disabled]="isRequestLoading"
+            (click)="sendJoinRequest()"
+          >
+            {{ isRequestLoading ? 'Invio richiesta...' : 'Invia richiesta' }}
+          </button>
+
+          <button
+            *ngIf="shouldShowUserMatchState"
+            type="button"
+            class="join-button"
+            disabled
+          >
+            {{ userMatchStateLabel }}
+          </button>
+
+          <button
+            *ngIf="isCreator && match.requiresApproval"
+            type="button"
+            class="join-button"
+            (click)="goToRequests()"
+          >
+            Gestisci richieste
+          </button>
+
+          <button
+            *ngIf="isCreator && !match.requiresApproval"
+            type="button"
+            class="join-button"
+            (click)="goToParticipants()"
+          >
+            Gestisci partecipanti
+          </button>
+        </section>
+      </div>
+    </section>
+  </main>
+</ion-content>

@@ -1,0 +1,219 @@
+<ion-content fullscreen class="account-settings-page">
+  <div class="account-settings-shell">
+    <header class="account-settings-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al profilo"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <div class="account-settings-title">
+        <h1>Impostazioni account</h1>
+        <p>Gestisci i tuoi dati personali e la sicurezza dell’account.</p>
+      </div>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <p
+      *ngIf="isLoadingProfile"
+      class="app-loading-text account-settings-loading"
+    >
+      Caricamento dati account...
+    </p>
+
+    <section class="account-settings-layout">
+      <section class="settings-panel personal-panel">
+        <h2>Dati personali</h2>
+
+        <label class="settings-field">
+          <span class="settings-field-icon">
+            <ion-icon name="person-outline"></ion-icon>
+          </span>
+
+          <span class="settings-field-content">
+            <span class="settings-field-label">Nome</span>
+
+            <input
+              type="text"
+              [(ngModel)]="form.name"
+              autocomplete="name"
+              placeholder="Inserisci il nome"
+            />
+          </span>
+        </label>
+
+        <label class="settings-field">
+          <span class="settings-field-icon">
+            <ion-icon name="mail-outline"></ion-icon>
+          </span>
+
+          <span class="settings-field-content">
+            <span class="settings-field-label">Email</span>
+
+            <input
+              type="email"
+              [(ngModel)]="form.email"
+              autocomplete="email"
+              placeholder="Inserisci l’email"
+            />
+          </span>
+        </label>
+
+        <label
+          #phoneField
+          class="settings-field"
+          [class.settings-field-error]="showPhoneRequiredError"
+        >
+          <span class="settings-field-icon">
+            <ion-icon name="call-outline"></ion-icon>
+          </span>
+
+          <span class="settings-field-content">
+            <span class="settings-field-label">
+              Telefono
+              <span class="required-star">*</span>
+            </span>
+
+            <input
+              #phoneInput
+              type="tel"
+              [(ngModel)]="form.phone"
+              (ngModelChange)="onPhoneChange()"
+              autocomplete="tel"
+              placeholder="Obbligatorio per salvare"
+            />
+
+            <span class="settings-field-helper">
+              Numero obbligatorio per aggiornare i dati dell’account.
+            </span>
+          </span>
+        </label>
+
+        <label
+          #preferredRoleField
+          class="settings-field"
+          [class.settings-field-highlight]="highlightPreferredRole"
+        >
+          <span class="settings-field-icon">
+            <ion-icon name="walk-outline"></ion-icon>
+          </span>
+
+          <span class="settings-field-content">
+            <span class="settings-field-label">Ruolo preferito</span>
+
+            <select
+              #preferredRoleSelect
+              [(ngModel)]="form.preferredRole"
+            >
+              <option
+                *ngFor="let role of preferredRoleOptions"
+                [value]="role.value"
+              >
+                {{ role.label }}
+              </option>
+            </select>
+
+            <span class="settings-field-helper">
+              Questo ruolo viene mostrato nel profilo e nelle partite.
+            </span>
+          </span>
+        </label>
+      </section>
+
+      <aside class="settings-right-column">
+        <section class="settings-panel security-panel">
+          <h2>Sicurezza</h2>
+
+          <label class="settings-field">
+            <span class="settings-field-icon security-icon">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+            </span>
+
+            <span class="settings-field-content">
+              <span class="settings-field-label">Password attuale</span>
+
+              <input
+                type="password"
+                [(ngModel)]="form.currentPassword"
+                autocomplete="current-password"
+                placeholder="Inserisci password attuale"
+              />
+            </span>
+          </label>
+
+          <label class="settings-field">
+            <span class="settings-field-icon security-icon">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+            </span>
+
+            <span class="settings-field-content">
+              <span class="settings-field-label">Nuova password</span>
+
+              <input
+                type="password"
+                [(ngModel)]="form.newPassword"
+                autocomplete="new-password"
+                placeholder="Almeno 8 caratteri"
+              />
+            </span>
+          </label>
+
+          <label class="settings-field">
+            <span class="settings-field-icon security-icon">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+            </span>
+
+            <span class="settings-field-content">
+              <span class="settings-field-label">Conferma password</span>
+
+              <input
+                type="password"
+                [(ngModel)]="form.confirmPassword"
+                autocomplete="new-password"
+                placeholder="Ripeti nuova password"
+              />
+            </span>
+          </label>
+        </section>
+
+        <section class="settings-action-panel">
+          <p
+            *ngIf="errorMessage"
+            class="app-feedback app-feedback-error settings-feedback"
+          >
+            {{ errorMessage }}
+          </p>
+
+          <p
+            *ngIf="successMessage"
+            class="app-feedback app-feedback-success settings-feedback"
+          >
+            {{ successMessage }}
+          </p>
+
+          <button
+            type="button"
+            class="save-button"
+            [disabled]="isSaving || isLoadingProfile"
+            (click)="saveChanges()"
+          >
+            {{ isSaving ? 'Salvataggio in corso...' : 'Salva modifiche' }}
+          </button>
+
+          <button
+            type="button"
+            class="cancel-button"
+            [disabled]="isSaving"
+            (click)="cancel()"
+          >
+            Annulla
+          </button>
+        </section>
+      </aside>
+    </section>
+  </div>
+</ion-content>

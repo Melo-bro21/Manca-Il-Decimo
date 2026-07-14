@@ -1,0 +1,182 @@
+<ion-content fullscreen class="find-field-page">
+  <div class="find-field-shell">
+    <header class="find-field-header">
+      <p>Centri sportivi</p>
+      <h1>Trova campo</h1>
+    </header>
+
+    <section class="search-section">
+      <div class="search-box">
+        <ion-icon name="search-outline"></ion-icon>
+
+        <input
+          type="text"
+          placeholder="Cerca centro sportivo o zona..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+    </section>
+
+    <section class="chips-row" aria-label="Filtri centri sportivi">
+      <button
+        type="button"
+        class="filter-chip"
+        *ngFor="let filter of filters"
+        [class.filter-chip-active]="selectedFilter === filter"
+        (click)="selectFilter(filter)"
+      >
+        <ion-icon [name]="getFilterIcon(filter)"></ion-icon>
+        {{ filter }}
+      </button>
+    </section>
+
+    <p
+      class="app-feedback app-feedback-error"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </p>
+
+    <section
+      class="loading-card"
+      *ngIf="isLoading"
+    >
+      Caricamento centri sportivi...
+    </section>
+
+    <section
+      *ngIf="!isLoading && filteredSportCenters.length > 0; else emptyState"
+      class="centers-list"
+    >
+      <article
+        class="center-card"
+        *ngFor="let center of filteredSportCenters"
+      >
+        <div class="center-card-main">
+          <div
+            class="center-image"
+            [style.background-image]="'url(' + center.imageUrl + ')'"
+          ></div>
+
+          <div class="center-content">
+            <div class="center-top">
+              <h2>{{ center.name }}</h2>
+              <span>{{ center.distanceKm }} km</span>
+            </div>
+
+            <div class="center-detail">
+              <ion-icon name="location-outline"></ion-icon>
+
+              <div>
+                <p>{{ center.address }}, {{ center.city }}</p>
+                <small>
+                  Zona <strong>{{ center.zone }}</strong>
+                </small>
+              </div>
+            </div>
+
+            <div class="center-tags">
+              <span *ngFor="let tag of center.tags">
+                <ion-icon [name]="getTagIcon(tag)"></ion-icon>
+                {{ tag }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="center-contact-row">
+          <div class="contact-item">
+            <ion-icon name="call-outline"></ion-icon>
+            <span>{{ center.phone || 'Telefono non indicato' }}</span>
+          </div>
+
+          <div class="contact-separator"></div>
+
+          <div class="contact-item">
+            <ion-icon name="mail-outline"></ion-icon>
+            <span>{{ center.email }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="contact-link"
+            (click)="contactCenter(center)"
+          >
+            Contatta
+          </button>
+        </div>
+
+        <div class="center-actions">
+          <button
+            type="button"
+            class="primary-action"
+            (click)="viewFields(center)"
+          >
+            {{ isCenterExpanded(center) ? 'Nascondi campi' : 'Vedi campi' }}
+          </button>
+
+          <button
+            type="button"
+            class="secondary-action"
+            (click)="useForCreateMatch(center)"
+          >
+            Usa per creare partita
+          </button>
+        </div>
+
+        <section
+          class="fields-panel"
+          *ngIf="isCenterExpanded(center)"
+        >
+          <div class="fields-panel-header">
+            <div>
+              <h3>Campi del centro</h3>
+              <p>Campi registrati per {{ center.name }}</p>
+            </div>
+
+            <span>{{ center.fields.length }} campi</span>
+          </div>
+
+          <section
+            class="empty-fields-card"
+            *ngIf="center.fields.length === 0"
+          >
+            Nessun campo registrato per questo centro.
+          </section>
+
+          <article
+            class="field-card"
+            *ngFor="let field of center.fields"
+          >
+            <div>
+              <h4>{{ field.name }}</h4>
+
+              <p>
+                {{ field.sportType }} · {{ getNormalizedFieldSize(field.size) }}
+              </p>
+            </div>
+
+            <div class="field-info-grid">
+              <span>{{ getFieldIndoorLabel(field.indoor) }}</span>
+              <span>{{ field.surface }}</span>
+              <span>{{ field.pricePerHour }}€/h</span>
+            </div>
+          </article>
+        </section>
+      </article>
+    </section>
+
+    <ng-template #emptyState>
+      <section
+        class="app-empty-state find-field-empty-state"
+        *ngIf="!isLoading"
+      >
+        <h3>Nessun centro trovato</h3>
+        <p>
+          Prova a cambiare ricerca o filtro per visualizzare altri centri
+          sportivi.
+        </p>
+      </section>
+    </ng-template>
+  </div>
+</ion-content>

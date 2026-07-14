@@ -1,0 +1,248 @@
+<ion-content fullscreen class="match-participants-page">
+  <div class="match-participants-shell">
+    <header class="match-participants-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al dettaglio partita"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Partecipanti</h1>
+
+      <button
+        type="button"
+        class="refresh-button-top"
+        (click)="loadParticipants()"
+      >
+        <ion-icon name="refresh-outline"></ion-icon>
+        Aggiorna
+      </button>
+    </header>
+
+    <p class="feedback success-feedback" *ngIf="successMessage">
+      {{ successMessage }}
+    </p>
+
+    <p class="feedback error-feedback" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </p>
+
+    <main class="participants-dashboard">
+      <aside class="participants-left">
+        <section class="intro-card">
+          <span>Partita #{{ matchId }}</span>
+
+          <h2>Gestisci presenze</h2>
+
+          <p>
+            Conferma chi si è presentato e ha pagato, rimuovi eventuali
+            giocatori aggiunti dal creatore oppure registra assenze.
+          </p>
+
+          <p class="attendance-locked-message" *ngIf="!isLoading && !hasMatchStarted">
+            Le presenze saranno gestibili solo dall’inizio della partita
+            <ng-container *ngIf="getMatchStartLabel()">
+              : {{ getMatchStartLabel() }}
+            </ng-container>
+            .
+          </p>
+        </section>
+
+        <section class="summary-card" *ngIf="!isLoading">
+          <div>
+            <h3>Partecipanti reali</h3>
+            <strong>{{ bookings.length }}</strong>
+            <p>
+              {{
+                bookings.length === 1
+                  ? 'utente confermato'
+                  : 'utenti confermati'
+              }}
+            </p>
+          </div>
+
+          <div class="summary-icon">
+            <ion-icon name="person-circle-outline"></ion-icon>
+          </div>
+        </section>
+
+        <section
+          class="summary-card guest-summary-card"
+          *ngIf="!isLoading && hasGuests"
+        >
+          <div>
+            <h3>Giocatori iniziali</h3>
+            <strong>{{ guests.length }}</strong>
+            <p>
+              {{
+                guests.length === 1
+                  ? 'giocatore manuale'
+                  : 'giocatori manuali'
+              }}
+            </p>
+          </div>
+
+          <div class="summary-icon">
+            <ion-icon name="person-circle-outline"></ion-icon>
+          </div>
+        </section>
+      </aside>
+
+      <section class="participants-right">
+        <section class="loading-card" *ngIf="isLoading">
+          Caricamento partecipanti...
+        </section>
+
+        <ng-container *ngIf="!isLoading">
+          <section class="empty-card" *ngIf="!hasSomethingToShow">
+            <ion-icon name="person-circle-outline"></ion-icon>
+
+            <h2>Nessun partecipante</h2>
+
+            <p>
+              Quando qualcuno si iscriverà alla partita oppure quando
+              aggiungerai giocatori iniziali, appariranno in questa lista.
+            </p>
+          </section>
+
+          <section class="section-block" *ngIf="hasParticipants">
+            <div class="section-title-row">
+              <div>
+                <span>Utenti iscritti</span>
+                <h2>Partecipanti reali</h2>
+              </div>
+
+              <strong>{{ bookings.length }}</strong>
+            </div>
+
+            <article
+              class="participant-card"
+              *ngFor="let booking of bookings"
+              [class.participant-card-closed]="isAttendanceClosed(booking)"
+            >
+              <div class="participant-avatar">
+                {{ getUserInitial(booking) }}
+              </div>
+
+              <div class="participant-body">
+                <div class="participant-top">
+                  <div>
+                    <h3>{{ getUserName(booking) }}</h3>
+                    <p>{{ getUserRole(booking) }}</p>
+                  </div>
+
+                  <span
+                    class="attendance-pill"
+                    [class.attendance-present]="booking.attendanceStatus === 'PRESENT'"
+                    [class.attendance-noshow]="booking.attendanceStatus === 'NO_SHOW'"
+                  >
+                    {{ getAttendanceLabel(booking) }}
+                  </span>
+                </div>
+
+                <div class="participant-info-grid">
+                  <span>
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    Affidabilità {{ getReliability(booking) }}
+                  </span>
+
+                  <span>
+                    <ion-icon name="wallet-outline"></ion-icon>
+                    {{ getPaymentLabel(booking) }}
+                  </span>
+
+                  <span>
+                    <ion-icon name="wallet-outline"></ion-icon>
+                    {{ getDepositLabel(booking) }}
+                  </span>
+                </div>
+
+                <div
+                  class="participant-actions"
+                  *ngIf="!isAttendanceClosed(booking)"
+                  [class.participant-actions-disabled]="!hasMatchStarted"
+                >
+                  <button
+                    type="button"
+                    class="noshow-button"
+                    [disabled]="isAttendanceActionDisabled(booking)"
+                    (click)="markNoShow(booking)"
+                  >
+                    <ion-icon name="close-circle-outline"></ion-icon>
+                    Assente
+                  </button>
+
+                  <button
+                    type="button"
+                    class="confirm-button"
+                    [disabled]="isAttendanceActionDisabled(booking)"
+                    (click)="confirmAttendance(booking)"
+                  >
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    Presente/pagato
+                  </button>
+
+                  <p class="attendance-action-hint" *ngIf="!hasMatchStarted">
+                    Potrai registrare presenze e assenze quando la partita sarà iniziata.
+                  </p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="section-block" *ngIf="hasGuests">
+            <div class="section-title-row">
+              <div>
+                <span>Giocatori iniziali</span>
+                <h2>Aggiunti dal creatore</h2>
+              </div>
+
+              <strong>{{ guests.length }}</strong>
+            </div>
+
+            <article class="guest-card" *ngFor="let guest of guests">
+              <div class="participant-avatar guest-avatar">
+                {{ getGuestInitial(guest) }}
+              </div>
+
+              <div class="participant-body">
+                <div class="participant-top">
+                  <div>
+                    <h3>{{ guest.name }}</h3>
+                    <p>{{ getGuestRole(guest) }}</p>
+                  </div>
+
+                  <span class="guest-pill">
+                    Manuale
+                  </span>
+                </div>
+
+                <div class="guest-info">
+                  Questo giocatore è stato inserito manualmente dal creatore
+                  della partita e non ha un account registrato.
+                </div>
+
+                <button
+                  type="button"
+                  class="remove-guest-button"
+                  [disabled]="guestActionLoadingId === guest.id"
+                  (click)="removeGuest(guest)"
+                >
+                  <ion-icon name="trash-outline"></ion-icon>
+                  {{
+                    guestActionLoadingId === guest.id
+                      ? 'Rimozione...'
+                      : 'Rimuovi giocatore'
+                  }}
+                </button>
+              </div>
+            </article>
+          </section>
+        </ng-container>
+      </section>
+    </main>
+  </div>
+</ion-content>

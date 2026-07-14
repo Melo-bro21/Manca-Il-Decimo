@@ -1,0 +1,107 @@
+
+
+
+:root {
+  /*
+   * App brand colors
+   * Manca il Decimo?
+   */
+
+  --app-bg: #050909;
+  --app-bg-soft: #0b1111;
+
+  --app-primary: #9bea1c;
+  --app-primary-dark: #78b915;
+  --app-primary-soft: rgba(155, 234, 28, 0.14);
+
+  --app-text-dark: #111817;
+  --app-text-light: #ffffff;
+  --app-text-muted: #6f7977;
+
+  --app-card: #ffffff;
+  --app-card-soft: #f5f7f3;
+
+  --app-border: rgba(17, 24, 23, 0.08);
+
+  --app-warning: #ffb020;
+  --app-warning-soft: #fff3dd;
+
+  --app-danger: #ff4d4f;
+  --app-danger-soft: #ffe9e9;
+
+  --app-success: #41c463;
+  --app-success-soft: #e8f8ec;
+
+  /*
+   * Ionic colors
+   */
+
+  --ion-color-primary: #9bea1c;
+  --ion-color-primary-rgb: 155, 234, 28;
+  --ion-color-primary-contrast: #101510;
+  --ion-color-primary-contrast-rgb: 16, 21, 16;
+  --ion-color-primary-shade: #88ce19;
+  --ion-color-primary-tint: #a5ec33;
+
+  --ion-color-secondary: #0b1111;
+  --ion-color-secondary-rgb: 11, 17, 17;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #0a0f0f;
+  --ion-color-secondary-tint: #232929;
+
+  --ion-color-tertiary: #ffffff;
+  --ion-color-tertiary-rgb: 255, 255, 255;
+  --ion-color-tertiary-contrast: #111817;
+  --ion-color-tertiary-contrast-rgb: 17, 24, 23;
+  --ion-color-tertiary-shade: #e0e0e0;
+  --ion-color-tertiary-tint: #ffffff;
+
+  --ion-color-success: #41c463;
+  --ion-color-success-rgb: 65, 196, 99;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #39ac57;
+  --ion-color-success-tint: #54ca73;
+
+  --ion-color-warning: #ffb020;
+  --ion-color-warning-rgb: 255, 176, 32;
+  --ion-color-warning-contrast: #111817;
+  --ion-color-warning-contrast-rgb: 17, 24, 23;
+  --ion-color-warning-shade: #e09b1c;
+  --ion-color-warning-tint: #ffb836;
+
+  --ion-color-danger: #ff4d4f;
+  --ion-color-danger-rgb: 255, 77, 79;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #e04446;
+  --ion-color-danger-tint: #ff5f61;
+
+  --ion-color-medium: #6f7977;
+  --ion-color-medium-rgb: 111, 121, 119;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #626a69;
+  --ion-color-medium-tint: #7d8685;
+
+  --ion-color-light: #f5f7f3;
+  --ion-color-light-rgb: 245, 247, 243;
+  --ion-color-light-contrast: #111817;
+  --ion-color-light-contrast-rgb: 17, 24, 23;
+  --ion-color-light-shade: #d8d9d6;
+  --ion-color-light-tint: #f6f8f4;
+
+  /*
+   * Ionic app defaults
+   */
+
+  --ion-background-color: #050909;
+  --ion-background-color-rgb: 5, 9, 9;
+
+  --ion-text-color: #111817;
+  --ion-text-color-rgb: 17, 24, 23;
+
+  --ion-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}

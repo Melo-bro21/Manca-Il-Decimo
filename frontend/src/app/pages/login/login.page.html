@@ -1,0 +1,95 @@
+<ion-content fullscreen class="login-page">
+  <div class="login-background">
+    <div class="login-overlay"></div>
+
+    <div class="login-content">
+      <button
+        type="button"
+        class="back-button"
+        routerLink="/welcome"
+        aria-label="Torna alla schermata iniziale"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <section class="login-header">
+        <h1>Bentornato</h1>
+
+        <p>
+          Accedi per gestire le tue partite e trovare il prossimo calcetto.
+        </p>
+      </section>
+
+      <section class="login-card">
+        <div class="input-box">
+          <ion-icon name="mail-outline"></ion-icon>
+
+          <ion-input
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+            [(ngModel)]="email"
+          ></ion-input>
+        </div>
+
+        <div class="input-box">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+
+          <ion-input
+            [type]="passwordInputType"
+            placeholder="Password"
+            autocomplete="current-password"
+            [(ngModel)]="password"
+          ></ion-input>
+
+          <ion-icon
+            name="eye-outline"
+            class="eye-icon"
+            (click)="togglePasswordVisibility()"
+          ></ion-icon>
+        </div>
+
+        <p
+          class="app-feedback app-feedback-error"
+          *ngIf="errorMessage"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <button
+          type="button"
+          class="forgot-password"
+          routerLink="/forgot-password"
+        >
+          Hai dimenticato la password?
+        </button>
+
+        <ion-button
+          expand="block"
+          class="login-button"
+          [disabled]="isLoading"
+          (click)="onLogin()"
+        >
+          {{ isLoading ? 'Accesso in corso...' : 'Accedi' }}
+        </ion-button>
+
+        <button
+          type="button"
+          class="register-button"
+          routerLink="/register"
+        >
+          <span>Non hai un account?</span>
+          <strong>Registrati</strong>
+        </button>
+      </section>
+
+      <button
+        type="button"
+        class="guest-button"
+        (click)="continueAsGuest()"
+      >
+        Continua come ospite
+      </button>
+    </div>
+  </div>
+</ion-content>

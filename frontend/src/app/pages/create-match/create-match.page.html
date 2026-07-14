@@ -1,0 +1,524 @@
+<ion-content fullscreen class="create-match-page">
+  <div class="create-match-shell">
+    <header class="create-match-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna indietro"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Crea nuova partita</h1>
+
+      <div></div>
+    </header>
+
+    <div class="create-match-layout">
+      <section class="create-match-panel create-match-left-panel">
+        <div class="form-group">
+          <label>Data e ora</label>
+
+          <div class="date-time-grid">
+            <div class="input-box">
+              <input
+                #dateInput
+                type="date"
+                aria-label="Data della partita"
+                title="Data della partita"
+                [(ngModel)]="form.date"
+                (ngModelChange)="onDateOrTimeChange()"
+              />
+
+              <button
+                type="button"
+                class="picker-icon-button"
+                aria-label="Apri calendario"
+                title="Apri calendario"
+                (click)="openNativePicker(dateInput)"
+              >
+                <ion-icon name="calendar-outline"></ion-icon>
+              </button>
+            </div>
+
+            <div class="input-box">
+              <input
+                #timeInput
+                type="time"
+                aria-label="Orario della partita"
+                title="Orario della partita"
+                [(ngModel)]="form.time"
+                (ngModelChange)="onDateOrTimeChange()"
+              />
+
+              <button
+                type="button"
+                class="picker-icon-button"
+                aria-label="Apri selettore orario"
+                title="Apri selettore orario"
+                (click)="openNativePicker(timeInput)"
+              >
+                <ion-icon name="time-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo partita</label>
+
+          <div class="match-type-grid">
+            <button
+              type="button"
+              *ngFor="let type of matchTypes"
+              class="match-type-button"
+              [class.match-type-button-active]="form.type === type"
+              (click)="selectMatchType(type)"
+            >
+              {{ type }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Centro sportivo</label>
+
+          <button
+            type="button"
+            class="field-select-button"
+            (click)="toggleSportsCenterSelector()"
+          >
+            <span class="field-select-left">
+              <span class="field-leading-icon">
+                <ion-icon name="football-outline"></ion-icon>
+              </span>
+
+              <span [class.placeholder-text]="!selectedSportsCenterLabel">
+                {{
+                  selectedSportsCenterLabel ||
+                    'Seleziona un centro sportivo'
+                }}
+              </span>
+            </span>
+
+            <ion-icon
+              class="field-chevron"
+              name="chevron-forward-outline"
+            ></ion-icon>
+          </button>
+
+          <div class="field-selector" *ngIf="showSportsCenterSelector">
+            <div class="field-selector-header">
+              <h2>Scegli un centro sportivo</h2>
+              <p>Seleziona prima il centro, poi sceglierai il campo.</p>
+            </div>
+
+            <section class="loading-mini-card" *ngIf="isLoadingSportsCenters">
+              Caricamento centri sportivi...
+            </section>
+
+            <article
+              class="field-option-card"
+              *ngFor="let sportsCenter of sportsCenters"
+            >
+              <div class="field-option-main">
+                <div class="field-image-placeholder">
+                  <ion-icon name="football-outline"></ion-icon>
+                </div>
+
+                <div class="field-option-content">
+                  <div class="field-option-top">
+                    <h3>{{ sportsCenter.name }}</h3>
+                    <strong>{{ sportsCenter.distanceKm }} km</strong>
+                  </div>
+
+                  <p class="field-address">
+                    <ion-icon name="location-outline"></ion-icon>
+                    {{ sportsCenter.address }}, {{ sportsCenter.city }}
+                  </p>
+
+                  <p class="field-zone">
+                    Campi disponibili
+                    <span>{{ sportsCenter.fields.length }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="field-option-footer">
+                <span>{{ sportsCenter.phone || 'Telefono non indicato' }}</span>
+
+                <button
+                  type="button"
+                  (click)="selectSportsCenter(sportsCenter)"
+                >
+                  Usa questo centro
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Campo</label>
+
+          <button
+            type="button"
+            class="field-select-button"
+            [disabled]="!selectedSportsCenterId"
+            (click)="toggleFieldSelector()"
+          >
+            <span class="field-select-left">
+              <span class="field-leading-icon">
+                <ion-icon name="football-outline"></ion-icon>
+              </span>
+
+              <span [class.placeholder-text]="!selectedFieldLabel">
+                {{
+                  selectedFieldLabel ||
+                    (selectedSportsCenterId
+                      ? 'Seleziona un campo'
+                      : 'Prima seleziona un centro')
+                }}
+              </span>
+            </span>
+
+            <ion-icon
+              class="field-chevron"
+              name="chevron-forward-outline"
+            ></ion-icon>
+          </button>
+
+          <div class="field-selector" *ngIf="showFieldSelector">
+            <div class="field-selector-header">
+              <h2>Scegli un campo</h2>
+              <p>I campi occupati in questo orario sono disabilitati.</p>
+            </div>
+
+            <section class="loading-mini-card" *ngIf="isLoadingFields">
+              Verifica disponibilità campi...
+            </section>
+
+            <section
+              class="loading-mini-card"
+              *ngIf="!isLoadingFields && compatibleFields.length === 0"
+            >
+              Nessun campo compatibile con {{ form.type }} in questo centro.
+            </section>
+
+            <article
+              class="field-option-card"
+              *ngFor="let field of compatibleFields"
+              [class.field-option-card-unavailable]="!isFieldSelectable(field)"
+            >
+              <div class="field-option-main">
+                <div class="field-image-placeholder">
+                  <ion-icon name="football-outline"></ion-icon>
+                </div>
+
+                <div class="field-option-content">
+                  <div class="field-option-top">
+                    <h3>{{ field.name }}</h3>
+
+                    <strong
+                      [class.availability-ok]="isFieldSelectable(field)"
+                      [class.availability-ko]="!isFieldSelectable(field)"
+                    >
+                      {{ getFieldAvailabilityLabel(field) }}
+                    </strong>
+                  </div>
+
+                  <p class="field-address">
+                    <ion-icon name="location-outline"></ion-icon>
+                    {{ field.surface }}
+                  </p>
+
+                  <p class="field-zone">
+                    Tipo
+                    <span>{{ field.size }}</span>
+                  </p>
+
+                  <div class="field-tags">
+                    <span>{{ field.indoor ? 'Indoor' : 'Outdoor' }}</span>
+                    <span>{{ field.size }}</span>
+                    <span>{{ field.pricePerHour }}€/h</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field-option-footer">
+                <span>
+                  {{
+                    isFieldSelectable(field)
+                      ? 'Campo selezionabile'
+                      : getFieldAvailabilityLabel(field)
+                  }}
+                </span>
+
+                <button
+                  type="button"
+                  [disabled]="!isFieldSelectable(field)"
+                  (click)="selectField(field)"
+                >
+                  Usa questo campo
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="left-bottom-grid">
+          <div class="form-group form-group-last">
+            <label>Giocatori già presenti</label>
+
+            <section class="initial-players-box">
+              <div class="initial-players-summary">
+                <div>
+                  <strong>
+                    {{ initialPlayersCount }}/{{ maxPlayersForSelectedType }}
+                  </strong>
+                  <span>giocatori iniziali</span>
+                </div>
+
+                <p>
+                  Posti pubblicati:
+                  <strong>{{ remainingSpotsAfterGuests }}</strong>
+                </p>
+              </div>
+
+              <div class="guest-form-grid">
+                <div class="guest-name-box">
+                  <input
+                    type="text"
+                    placeholder="Nome giocatore"
+                    [(ngModel)]="guestName"
+                  />
+                </div>
+
+                <div class="guest-role-box">
+                  <select [(ngModel)]="guestRole">
+                    <option
+                      *ngFor="let role of guestRoleOptions"
+                      [ngValue]="role.value"
+                    >
+                      {{ role.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="add-guest-button"
+                (click)="addInitialGuest()"
+              >
+                <ion-icon name="person-add-outline"></ion-icon>
+                Aggiungi partecipante
+              </button>
+
+              <div class="guest-list" *ngIf="initialGuests.length > 0">
+                <article
+                  class="guest-row"
+                  *ngFor="let guest of initialGuests"
+                >
+                  <div>
+                    <strong>{{ guest.name }}</strong>
+                    <span>{{ getGuestRoleLabel(guest.preferredRole) }}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="remove-guest-button"
+                    aria-label="Rimuovi partecipante"
+                    (click)="removeInitialGuest(guest.id)"
+                  >
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </article>
+              </div>
+
+              <p
+                class="initial-players-helper"
+                *ngIf="initialGuests.length === 0"
+              >
+                Aggiungi gli amici che sono già confermati nella partita.
+              </p>
+            </section>
+          </div>
+
+          <div class="left-secondary-fields">
+            <div class="form-group">
+              <label>Cauzione richiesta</label>
+
+              <div class="select-box">
+                <select [(ngModel)]="form.deposit">
+                  <option
+                    *ngFor="let deposit of depositOptions"
+                    [ngValue]="deposit"
+                  >
+                    {{ deposit }}€
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group form-group-last">
+              <label>Descrizione (facoltativa)</label>
+
+              <div class="textarea-box">
+                <textarea
+                  maxlength="200"
+                  placeholder="Es. Partita amatoriale livello medio, età media 20/35, spirito di squadra e divertimento"
+                  [(ngModel)]="form.description"
+                ></textarea>
+
+                <span>{{ descriptionLength }}/200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="create-match-right-column">
+        <section class="create-match-panel create-match-action-panel">
+          <div
+            class="premium-filter-box"
+            [class.premium-filter-box-active]="
+              isPremium && form.onlyReliableUsers
+            "
+          >
+            <div class="premium-filter-main">
+              <div class="premium-filter-text">
+                <div class="premium-filter-title">
+                  <strong>
+                    {{ isPremium ? 'Solo utenti affidabili' : 'Passa a Premium' }}
+                  </strong>
+
+                  <span>{{ isPremium ? 'Premium' : 'Novità' }}</span>
+
+                  <ion-icon name="information-circle-outline"></ion-icon>
+                </div>
+
+                <p>
+                  {{
+                    isPremium
+                      ? 'Limita l’iscrizione agli utenti con alta affidabilità.'
+                      : 'Aumenta la visibilità della tua partita e trova più giocatori.'
+                  }}
+                </p>
+
+                <small *ngIf="isLoadingPremiumStatus">
+                  Verifica stato Premium in corso...
+                </small>
+
+                <small *ngIf="!isLoadingPremiumStatus && !isPremium">
+                  Tocca per scoprire Premium.
+                </small>
+
+                <small *ngIf="!isLoadingPremiumStatus && isPremium">
+                  Funzione Premium attiva per questo account.
+                </small>
+              </div>
+
+              <button
+                type="button"
+                class="premium-toggle-button"
+                [class.premium-toggle-button-active]="form.onlyReliableUsers"
+                [class.premium-toggle-button-locked]="!isPremium"
+                (click)="toggleReliableUsers()"
+                aria-label="Solo utenti affidabili"
+              >
+                <span></span>
+              </button>
+            </div>
+
+            <div
+              *ngIf="isPremium && form.onlyReliableUsers"
+              class="premium-rules-panel"
+            >
+              <div class="premium-rules-header">
+                <strong>Regole Premium</strong>
+                <p>Definisci chi può iscriversi alla tua partita.</p>
+              </div>
+
+              <div class="premium-rules-group">
+                <label>Affidabilità minima richiesta</label>
+
+                <div class="premium-chip-grid">
+                  <button
+                    type="button"
+                    *ngFor="let score of minReliabilityOptions"
+                    class="premium-rule-chip"
+                    [class.premium-rule-chip-active]="
+                      form.minReliabilityScore === score
+                    "
+                    (click)="selectMinReliabilityScore(score)"
+                  >
+                    {{ score }}+
+                  </button>
+                </div>
+
+                <p class="premium-rule-helper">
+                  Gli utenti sotto questa soglia non potranno iscriversi.
+                </p>
+              </div>
+
+              <div class="premium-rules-group">
+                <label>Gestione iscrizioni</label>
+
+                <div class="premium-registration-grid">
+                  <button
+                    type="button"
+                    *ngFor="let mode of registrationModeOptions"
+                    class="premium-rule-chip"
+                    [class.premium-rule-chip-active]="
+                      form.registrationMode === mode.value
+                    "
+                    (click)="selectRegistrationMode(mode.value)"
+                  >
+                    {{ mode.label }}
+                  </button>
+                </div>
+
+                <p
+                  class="premium-rule-helper"
+                  *ngIf="form.registrationMode === 'FREE'"
+                >
+                  Gli utenti affidabili possono iscriversi automaticamente.
+                </p>
+
+                <p
+                  class="premium-rule-helper"
+                  *ngIf="form.registrationMode === 'APPROVAL'"
+                >
+                  L’organizzatore approva manualmente ogni richiesta.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p class="app-feedback app-feedback-info" *ngIf="infoMessage">
+            {{ infoMessage }}
+          </p>
+
+          <p class="app-feedback app-feedback-error" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </p>
+
+          <p class="app-feedback app-feedback-success" *ngIf="successMessage">
+            {{ successMessage }}
+          </p>
+
+          <button
+            type="button"
+            class="publish-button"
+            [disabled]="isPublishing"
+            (click)="publishMatch()"
+          >
+            {{ isPublishing ? 'Pubblicazione...' : 'Pubblica partita' }}
+          </button>
+        </section>
+      </aside>
+    </div>
+  </div>
+</ion-content>

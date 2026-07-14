@@ -1,0 +1,52 @@
+<button type="button" class="match-card" (click)="onCardClick()">
+  <div
+    class="match-image"
+    [style.background-image]="'url(' + match.imageUrl + ')'"
+    role="img"
+    [attr.aria-label]="'Immagine di ' + match.centerName"
+  ></div>
+
+  <div class="match-content">
+    <div class="match-main-info">
+      <div class="match-top-row">
+        <p>
+          <strong>{{ match.dayLabel }}</strong>
+          · {{ match.time }}
+        </p>
+
+        <span class="spots-badge">
+          {{ match.availableSpots }} posti
+        </span>
+      </div>
+
+      <p class="match-type">
+        {{ match.type }}
+      </p>
+
+      <div
+        class="premium-rules-row"
+        *ngIf="match.requiresApproval || match.onlyReliableUsers"
+      >
+        <span class="premium-rule" *ngIf="match.requiresApproval">
+          Premium · richiesta
+        </span>
+
+        <span class="premium-rule" *ngIf="match.onlyReliableUsers">
+          Min affidabilità {{ match.minReliabilityScore || 0 }}
+        </span>
+      </div>
+
+      <h2>
+        {{ match.centerName }}
+      </h2>
+
+      <p class="match-address">
+        {{ match.address }}
+      </p>
+    </div>
+
+    <div class="match-price">
+      {{ match.deposit }}€
+    </div>
+  </div>
+</button>

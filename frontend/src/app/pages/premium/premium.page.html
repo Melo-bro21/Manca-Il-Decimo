@@ -1,0 +1,138 @@
+<ion-content fullscreen class="premium-page">
+  <div class="premium-shell">
+    <header class="premium-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al profilo"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Premium</h1>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <p
+      *ngIf="isLoading"
+      class="app-loading-text premium-loading"
+    >
+      Caricamento Premium...
+    </p>
+
+    <section class="premium-layout">
+      <section class="premium-hero">
+        <div class="premium-hero-glow"></div>
+
+        <div class="premium-hero-icon">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </div>
+
+        <div class="premium-hero-content">
+          <span class="premium-badge">
+            {{ isPremium ? 'PREMIUM ATTIVO' : 'PREMIUM' }}
+          </span>
+
+          <h2>
+            {{ isPremium ? 'Premium attivo' : 'Diventa Premium' }}
+          </h2>
+
+          <p>
+            {{
+              isPremium
+                ? 'Hai già sbloccato gli strumenti avanzati per organizzare partite più affidabili.'
+                : 'Sblocca filtri avanzati, più controllo sulle iscrizioni e partite più sicure.'
+            }}
+          </p>
+        </div>
+      </section>
+
+      <section class="premium-benefits-panel">
+        <div class="premium-section-heading">
+          <span>Vantaggi</span>
+          <h3>Cosa ottieni con Premium</h3>
+        </div>
+
+        <div class="premium-benefits-grid">
+          <article
+            *ngFor="let benefit of benefits"
+            class="premium-benefit-card"
+          >
+            <span class="premium-benefit-icon">
+              <ion-icon [name]="benefit.icon"></ion-icon>
+            </span>
+
+            <span class="premium-benefit-text">
+              <strong>{{ benefit.title }}</strong>
+              <small>{{ benefit.description }}</small>
+            </span>
+          </article>
+        </div>
+      </section>
+
+      <aside class="premium-side-panel">
+        <section class="premium-price-card">
+          <div class="premium-price-top">
+            <span>Prezzo demo</span>
+
+            <strong>5€</strong>
+          </div>
+
+          <p>
+            Il costo viene scalato dal tuo Wallet demo. Nessun pagamento reale
+            viene effettuato.
+          </p>
+        </section>
+
+        <p
+          *ngIf="errorMessage"
+          class="app-feedback app-feedback-error premium-feedback"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <p
+          *ngIf="successMessage"
+          class="app-feedback app-feedback-success premium-feedback"
+        >
+          {{ successMessage }}
+        </p>
+
+        <button
+          *ngIf="!isPremium"
+          type="button"
+          class="premium-buy-button"
+          [disabled]="isActivating || isLoading"
+          (click)="activatePremium()"
+        >
+          {{ isActivating ? 'Attivazione in corso...' : 'Acquista Premium' }}
+        </button>
+
+        <div
+          *ngIf="isPremium"
+          class="premium-active-box"
+        >
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+
+          <div>
+            <strong>Premium già attivo</strong>
+            <p>
+              Puoi usare il filtro “Solo utenti affidabili” quando crei una
+              partita.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="premium-secondary-button"
+          (click)="goBack()"
+        >
+          Torna al profilo
+        </button>
+      </aside>
+    </section>
+  </div>
+</ion-content>

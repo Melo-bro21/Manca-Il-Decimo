@@ -1,0 +1,98 @@
+<ion-content fullscreen class="notifications-page">
+  <div class="notifications-shell">
+    <header class="notifications-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al profilo"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Notifiche</h1>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <div class="notifications-toolbar">
+      <p>Resta aggiornato su richieste, iscrizioni e partite.</p>
+
+      <button
+        type="button"
+        class="mark-all-button"
+        [disabled]="!hasUnreadNotifications || isLoading"
+        (click)="markAllAsRead()"
+      >
+        Segna tutte come lette
+      </button>
+    </div>
+
+    <p class="notifications-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </p>
+
+    <main class="notifications-content">
+      <section class="app-empty-state notifications-empty-state" *ngIf="isLoading">
+        <h3>Caricamento notifiche...</h3>
+        <p>Stiamo recuperando gli aggiornamenti collegati al tuo account.</p>
+      </section>
+
+      <ng-container *ngIf="!isLoading">
+        <ng-container *ngIf="hasNotifications; else emptyNotifications">
+          <section
+            class="notification-group"
+            *ngFor="let group of groupedNotifications"
+          >
+            <h2>{{ group.groupLabel }}</h2>
+
+            <article
+              class="notification-card"
+              *ngFor="let notification of group.items"
+              [class.notification-card-unread]="!notification.isRead"
+              [class.notification-card-read]="notification.isRead"
+              [class.notification-late-cancel-card]="isLateCancellationNotification(notification)"
+              (click)="openNotification(notification)"
+            >
+              <div
+                class="notification-icon"
+                [ngClass]="getIconClass(notification.type)"
+                aria-hidden="true"
+              >
+                <ion-icon [name]="getIconName(notification.type)"></ion-icon>
+              </div>
+
+              <div class="notification-body">
+                <div class="notification-top">
+                  <h3>{{ notification.title }}</h3>
+
+                  <span class="notification-time">
+                    {{ notification.timeLabel }}
+                  </span>
+                </div>
+
+                <p>{{ notification.message }}</p>
+              </div>
+
+              <span
+                class="unread-dot"
+                *ngIf="!notification.isRead"
+                aria-label="Notifica non letta"
+              ></span>
+            </article>
+          </section>
+        </ng-container>
+
+        <ng-template #emptyNotifications>
+          <section class="app-empty-state notifications-empty-state">
+            <h3>Nessuna notifica</h3>
+            <p>
+              Qui compariranno richieste, iscrizioni, rimborsi, penalità e
+              aggiornamenti sulle tue partite.
+            </p>
+          </section>
+        </ng-template>
+      </ng-container>
+    </main>
+  </div>
+</ion-content>

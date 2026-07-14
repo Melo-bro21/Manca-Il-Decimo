@@ -1,0 +1,195 @@
+<ion-content fullscreen class="match-requests-page">
+  <div class="match-requests-shell">
+    <header class="match-requests-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al dettaglio partita"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Richieste ricevute</h1>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <section class="intro-card">
+      <div class="intro-icon">
+        <ion-icon name="people-outline"></ion-icon>
+      </div>
+
+      <div class="intro-copy">
+        <span>Partita #{{ matchId }}</span>
+        <h2>Gestisci le richieste</h2>
+        <p>
+          Accetta o rifiuta gli utenti che hanno richiesto di partecipare alla
+          tua partita ad invito.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="refresh-button"
+        [disabled]="isLoading || actionLoadingId !== null"
+        (click)="loadRequests()"
+      >
+        <ion-icon name="refresh-outline"></ion-icon>
+        Aggiorna
+      </button>
+    </section>
+
+    <p class="feedback success-feedback" *ngIf="successMessage">
+      {{ successMessage }}
+    </p>
+
+    <p class="feedback error-feedback" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </p>
+
+    <main class="requests-content">
+      <section class="loading-card" *ngIf="isLoading">
+        Caricamento richieste...
+      </section>
+
+      <ng-container *ngIf="!isLoading">
+        <section class="request-section" *ngIf="pendingRequests.length > 0">
+          <h2>In attesa</h2>
+
+          <article
+            class="request-card"
+            *ngFor="let request of pendingRequests"
+          >
+            <div class="request-avatar">
+              {{ getUserInitial(request) }}
+            </div>
+
+            <div class="request-body">
+              <div class="request-top">
+                <div>
+                  <h3>{{ getUserName(request) }}</h3>
+                  <p>{{ getUserRole(request) }}</p>
+                </div>
+
+                <span class="status-pill status-pending">
+                  {{ getStatusLabel(request.status) }}
+                </span>
+              </div>
+
+              <div class="request-info-grid">
+                <span>
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                  Affidabilità {{ request.user?.reliabilityScore || 0 }}
+                </span>
+
+                <span>
+                  <ion-icon name="time-outline"></ion-icon>
+                  Richiesta #{{ request.id }}
+                </span>
+              </div>
+
+              <div class="request-actions">
+                <button
+                  type="button"
+                  class="reject-button"
+                  [disabled]="actionLoadingId !== null || request.status !== 'PENDING'"
+                  (click)="rejectRequest(request)"
+                >
+                  <ion-icon name="close-circle-outline"></ion-icon>
+                  Rifiuta
+                </button>
+
+                <button
+                  type="button"
+                  class="approve-button"
+                  [disabled]="actionLoadingId !== null || request.status !== 'PENDING'"
+                  (click)="approveRequest(request)"
+                >
+                  <ion-icon name="checkmark-circle-outline"></ion-icon>
+                  Accetta
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="request-section" *ngIf="completedRequests.length > 0">
+          <h2>Gestite</h2>
+
+          <article
+            class="request-card request-card-completed"
+            *ngFor="let request of completedRequests"
+          >
+            <div class="request-avatar">
+              {{ getUserInitial(request) }}
+            </div>
+
+            <div class="request-body">
+              <div class="request-top">
+                <div>
+                  <h3>{{ getUserName(request) }}</h3>
+                  <p>{{ getUserRole(request) }}</p>
+                </div>
+
+                <span
+                  class="status-pill"
+                  [class.status-approved]="request.status === 'APPROVED'"
+                  [class.status-rejected]="request.status === 'REJECTED'"
+                >
+                  {{ getStatusLabel(request.status) }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="empty-card" *ngIf="!hasRequests">
+          <div class="empty-illustration">
+            <div class="empty-users">
+              <ion-icon name="people-outline"></ion-icon>
+            </div>
+
+            <div class="empty-search">
+              <ion-icon name="search-outline"></ion-icon>
+            </div>
+          </div>
+
+          <div class="empty-divider"></div>
+
+          <div class="empty-copy">
+            <h2>Nessuna richiesta</h2>
+            <p>
+              Quando un utente invierà una richiesta di partecipazione, la
+              vedrai qui.
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="empty-card"
+          *ngIf="hasRequests && pendingRequests.length === 0 && completedRequests.length === 0"
+        >
+          <div class="empty-illustration">
+            <div class="empty-users">
+              <ion-icon name="people-outline"></ion-icon>
+            </div>
+
+            <div class="empty-search">
+              <ion-icon name="search-outline"></ion-icon>
+            </div>
+          </div>
+
+          <div class="empty-divider"></div>
+
+          <div class="empty-copy">
+            <h2>Nessuna richiesta da gestire</h2>
+            <p>
+              Non ci sono richieste in attesa per questa partita.
+            </p>
+          </div>
+        </section>
+      </ng-container>
+    </main>
+  </div>
+</ion-content>

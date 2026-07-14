@@ -1,0 +1,131 @@
+<ion-content fullscreen class="wallet-page">
+  <div class="wallet-shell">
+    <header class="wallet-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al profilo"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Wallet</h1>
+
+      <div></div>
+    </header>
+
+    <section class="balance-card">
+      <div class="balance-content">
+        <p>Saldo attuale</p>
+
+        <strong *ngIf="!isLoadingWallet">
+          {{ formatBalance(currentBalance) }}
+        </strong>
+
+        <strong *ngIf="isLoadingWallet">
+          ...
+        </strong>
+      </div>
+
+      <div class="balance-icon">
+        <ion-icon name="wallet-outline"></ion-icon>
+      </div>
+    </section>
+
+    <section class="top-up-card">
+      <div class="top-up-header">
+        <div>
+          <h2>Ricarica demo</h2>
+          <p>Aggiungi fondi simulati per testare iscrizioni e cauzioni.</p>
+        </div>
+      </div>
+
+      <div class="top-up-options">
+        <button
+          type="button"
+          *ngFor="let amount of topUpOptions"
+          [disabled]="isTopUpLoading"
+          (click)="topUp(amount)"
+        >
+          +{{ formatBalance(amount) }}
+        </button>
+      </div>
+    </section>
+
+    <p
+      class="wallet-feedback wallet-feedback-error"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </p>
+
+    <p
+      class="wallet-feedback wallet-feedback-success"
+      *ngIf="successMessage"
+    >
+      {{ successMessage }}
+    </p>
+
+    <section class="movements-card">
+      <div class="movements-title">
+        <span>
+          <ion-icon name="receipt-outline"></ion-icon>
+        </span>
+
+        <h2>Movimenti</h2>
+      </div>
+
+      <section
+        class="wallet-empty-state"
+        *ngIf="!isLoadingWallet && transactions.length === 0"
+      >
+        <p>Nessun movimento ancora registrato.</p>
+      </section>
+
+      <section
+        class="wallet-empty-state"
+        *ngIf="isLoadingWallet"
+      >
+        <p>Caricamento movimenti...</p>
+      </section>
+
+      <div
+        class="movement-list"
+        *ngIf="!isLoadingWallet && transactions.length > 0"
+      >
+        <article
+          class="movement-row"
+          *ngFor="let transaction of transactions"
+        >
+          <div class="movement-date">
+            {{ formatTransactionDate(transaction.createdAt) }}
+          </div>
+
+          <div
+            class="movement-icon"
+            [class.movement-icon-positive]="isPositiveTransaction(transaction)"
+            [class.movement-icon-negative]="!isPositiveTransaction(transaction)"
+          >
+            <ion-icon
+              [name]="isPositiveTransaction(transaction) ? 'add-outline' : 'bag-handle-outline'"
+            ></ion-icon>
+          </div>
+
+          <div class="movement-info">
+            <h3>{{ getTransactionTitle(transaction) }}</h3>
+            <p>{{ getTransactionSubtitle(transaction) }}</p>
+          </div>
+
+          <div
+            class="movement-amount"
+            [class.movement-amount-positive]="isPositiveTransaction(transaction)"
+            [class.movement-amount-negative]="!isPositiveTransaction(transaction)"
+          >
+            {{ formatAmount(transaction.amount) }}
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</ion-content>

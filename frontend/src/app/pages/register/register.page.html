@@ -1,0 +1,129 @@
+<ion-content fullscreen>
+  <main class="register-page">
+    <section class="register-shell">
+      <button
+        type="button"
+        class="back-button"
+        routerLink="/welcome"
+        aria-label="Torna alla schermata iniziale"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <section class="register-hero">
+        <h1>Registrati</h1>
+        <p>
+          Unisciti a Manca il Decimo
+          <br />
+          e trova la tua prossima partita.
+        </p>
+      </section>
+
+      <section class="register-card">
+        <div class="form-field">
+          <ion-icon name="person-outline"></ion-icon>
+
+          <ion-input
+            type="text"
+            placeholder="Nome"
+            autocomplete="name"
+            [(ngModel)]="name"
+          ></ion-input>
+
+          <span class="field-focus-line"></span>
+        </div>
+
+        <div class="form-field">
+          <ion-icon name="mail-outline"></ion-icon>
+
+          <ion-input
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+            [(ngModel)]="email"
+          ></ion-input>
+
+          <span class="field-focus-line"></span>
+        </div>
+
+        <div class="form-field">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+
+          <ion-input
+            [type]="passwordInputType"
+            placeholder="Password"
+            autocomplete="new-password"
+            [(ngModel)]="password"
+          ></ion-input>
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            aria-label="Mostra o nascondi password"
+          >
+            <ion-icon name="eye-outline"></ion-icon>
+          </button>
+
+          <span class="field-focus-line"></span>
+        </div>
+
+        <div class="form-field">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+
+          <ion-input
+            [type]="confirmPasswordInputType"
+            placeholder="Conferma password"
+            autocomplete="new-password"
+            [(ngModel)]="confirmPassword"
+          ></ion-input>
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="toggleConfirmPasswordVisibility()"
+            aria-label="Mostra o nascondi conferma password"
+          >
+            <ion-icon name="eye-outline"></ion-icon>
+          </button>
+
+          <span class="field-focus-line"></span>
+        </div>
+
+        <p
+          class="app-feedback app-feedback-error"
+          *ngIf="errorMessage"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <ion-button
+          expand="block"
+          class="register-button"
+          [disabled]="isLoading"
+          (click)="onRegister()"
+        >
+          {{ isLoading ? 'Registrazione in corso...' : 'Registrati' }}
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="login-button"
+          routerLink="/login"
+        >
+          Hai già un account?
+          <span>Accedi</span>
+        </ion-button>
+      </section>
+
+      <button
+        type="button"
+        class="guest-link"
+        routerLink="/tabs/home"
+      >
+        Continua come ospite
+      </button>
+    </section>
+  </main>
+</ion-content>

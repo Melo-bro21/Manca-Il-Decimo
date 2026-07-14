@@ -1,0 +1,197 @@
+<ion-content fullscreen class="match-management-page">
+  <main class="match-management-shell">
+    <header class="management-header">
+      <button
+        type="button"
+        class="back-button"
+        (click)="goBack()"
+        aria-label="Torna alle mie partite"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <div>
+        <p>Area creator</p>
+        <h1>Gestione partita</h1>
+      </div>
+    </header>
+
+    <section *ngIf="isLoading" class="state-card">
+      <ion-icon name="football-outline"></ion-icon>
+      <h2>Caricamento...</h2>
+      <p>Stiamo recuperando i partecipanti della partita.</p>
+    </section>
+
+    <section *ngIf="errorMessage && !isLoading" class="feedback-card error">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <p>{{ errorMessage }}</p>
+    </section>
+
+    <section
+      *ngIf="successMessage && !isLoading"
+      class="feedback-card success"
+    >
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <p>{{ successMessage }}</p>
+    </section>
+
+    <ng-container *ngIf="management && !isLoading">
+      <section class="match-summary-card">
+        <div class="summary-icon">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+        </div>
+
+        <div class="summary-content">
+          <span class="status-pill">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            Partita conclusa
+          </span>
+
+          <h2>{{ management.match.title }}</h2>
+
+          <div class="summary-row">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>
+              {{ formatDate(management.match.startsAt) }} ·
+              {{ formatTime(management.match.startsAt) }}
+            </span>
+          </div>
+
+          <div class="summary-row">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>
+              {{
+                management.match.field?.sportsCenter?.name ||
+                  'Centro sportivo non indicato'
+              }}
+              · {{ management.match.field?.name || 'Campo non indicato' }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section *ngIf="!management.canReport" class="feedback-card warning">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <p>
+          La gestione segnalazioni sarà disponibile solo dopo la fine della
+          partita.
+        </p>
+      </section>
+
+      <section class="participants-section">
+        <div class="section-title">
+          <p>Partecipanti reali</p>
+          <h2>Segnala un utente</h2>
+        </div>
+
+        <section *ngIf="participants.length === 0" class="state-card">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <h2>Nessun utente reale</h2>
+          <p>
+            Qui compariranno solo gli utenti iscritti realmente alla partita.
+            Gli utenti fantoccio non sono segnalabili.
+          </p>
+        </section>
+
+        <article
+          *ngFor="let participant of participants"
+          class="participant-card"
+        >
+          <div class="participant-main">
+            <div class="participant-avatar">
+              <ion-icon name="person-circle-outline"></ion-icon>
+            </div>
+
+            <div class="participant-info">
+              <h3>{{ participant.user.name || participant.user.email }}</h3>
+
+              <p>
+                <span class="role-pill">
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                  {{ participant.user.preferredRole || 'Ruolo non indicato' }}
+                </span>
+
+                <span class="reliability-text">
+                  Affidabilità {{ participant.user.reliabilityScore }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="report-button"
+            [disabled]="!management.canReport"
+            (click)="selectParticipant(participant, $event)"
+          >
+            <ion-icon name="flag-outline"></ion-icon>
+            Segnala
+          </button>
+        </article>
+      </section>
+
+      <section
+        *ngIf="selectedParticipant"
+        class="report-panel"
+      >
+        <div class="section-title report-title">
+          <p>Nuova segnalazione</p>
+          <h2>{{ selectedParticipantName }}</h2>
+        </div>
+
+        <label class="form-label">Motivo segnalazione</label>
+
+        <ion-select
+          interface="popover"
+          placeholder="Seleziona motivo"
+          [(ngModel)]="selectedReason"
+        >
+          <ion-select-option
+            *ngFor="let reason of reportReasons"
+            [value]="reason.value"
+          >
+            {{ reason.label }}
+          </ion-select-option>
+        </ion-select>
+
+        <label class="form-label">
+          Descrizione
+          <span *ngIf="!isOtherReasonSelected">facoltativa</span>
+          <span *ngIf="isOtherReasonSelected">obbligatoria</span>
+        </label>
+
+        <ion-textarea
+          autoGrow="true"
+          rows="4"
+          placeholder="Aggiungi dettagli utili per l’admin."
+          [(ngModel)]="description"
+        ></ion-textarea>
+
+        <p class="report-note">
+          La segnalazione sarà valutata da un admin. Non comporta nessuna
+          sospensione automatica.
+        </p>
+
+        <div class="report-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            [disabled]="isSubmitting"
+            (click)="cancelReport()"
+          >
+            Annulla
+          </button>
+
+          <button
+            type="button"
+            class="submit-button"
+            [disabled]="isSubmitting"
+            (click)="submitReport()"
+          >
+            {{ isSubmitting ? 'Invio...' : 'Invia segnalazione' }}
+          </button>
+        </div>
+      </section>
+    </ng-container>
+  </main>
+</ion-content>

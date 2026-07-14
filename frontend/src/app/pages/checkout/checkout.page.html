@@ -1,0 +1,144 @@
+<ion-content fullscreen class="checkout-page">
+  <main class="checkout-shell">
+    <header class="checkout-header">
+      <button
+        type="button"
+        class="back-button"
+        aria-label="Torna al dettaglio partita"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <h1>Conferma iscrizione</h1>
+
+      <span class="header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <section class="checkout-card">
+      <section class="loading-card" *ngIf="isLoading">
+        Caricamento riepilogo...
+      </section>
+
+      <ng-container *ngIf="!isLoading">
+        <section class="checkout-section summary-section">
+          <div class="section-title-row">
+            <span class="section-icon">
+              <ion-icon name="calendar-outline"></ion-icon>
+            </span>
+
+            <h2>Riepilogo</h2>
+          </div>
+
+          <div class="summary-content">
+            <div class="summary-info">
+              <p>
+                <strong>{{ match.dayLabel }}</strong>
+                <span>·</span>
+                <strong>{{ match.time }}</strong>
+              </p>
+
+              <p>{{ match.centerName }}</p>
+
+              <span class="match-type">
+                {{ match.type }}
+              </span>
+            </div>
+
+            <div class="deposit-box">
+              <strong>{{ match.deposit }}€</strong>
+              <span>Cauzione</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="checkout-section wallet-section">
+          <div class="section-title-row">
+            <span class="section-icon">
+              <ion-icon name="wallet-outline"></ion-icon>
+            </span>
+
+            <h2>Il tuo wallet</h2>
+          </div>
+
+          <div class="wallet-row">
+            <span>Saldo attuale</span>
+            <strong>{{ wallet.balance | number: '1.2-2' }}€</strong>
+          </div>
+
+          <div class="wallet-row wallet-after-row">
+            <span>Dopo la cauzione</span>
+            <strong>{{ wallet.balanceAfterDeposit | number: '1.2-2' }}€</strong>
+          </div>
+        </section>
+
+        <section class="checkout-section payment-section">
+          <div class="section-title-row">
+            <span class="section-icon">
+              <ion-icon name="card-outline"></ion-icon>
+            </span>
+
+            <h2>Dettaglio pagamento</h2>
+          </div>
+
+          <div class="payment-row">
+            <span>Cauzione partita</span>
+            <strong>{{ match.deposit | number: '1.2-2' }}€</strong>
+          </div>
+
+          <div class="payment-divider"></div>
+
+          <div class="payment-row total-row">
+            <span>Totale bloccato ora</span>
+            <strong>{{ total | number: '1.2-2' }}€</strong>
+          </div>
+        </section>
+
+        <section class="deposit-info-box">
+          <div class="deposit-info-icon">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+
+          <p>
+            La cauzione ti verrà rimborsata al termine della partita se rispetti
+            le regole.
+          </p>
+        </section>
+
+        <p class="app-feedback app-feedback-success" *ngIf="successMessage">
+          {{ successMessage }}
+        </p>
+
+        <p class="app-feedback app-feedback-error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </p>
+
+        <section class="checkout-actions">
+          <button
+            type="button"
+            class="confirm-button"
+            [disabled]="isActionDisabled"
+            (click)="confirmJoin()"
+          >
+            {{
+              isConfirming
+                ? 'Conferma in corso...'
+                : canJoin
+                  ? 'Conferma e partecipa'
+                  : 'Non puoi partecipare'
+            }}
+          </button>
+
+          <button
+            type="button"
+            class="cancel-button"
+            [disabled]="isConfirming"
+            (click)="cancel()"
+          >
+            Annulla
+          </button>
+        </section>
+      </ng-container>
+    </section>
+  </main>
+</ion-content>

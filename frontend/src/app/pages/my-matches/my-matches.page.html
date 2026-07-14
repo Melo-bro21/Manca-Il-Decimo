@@ -1,0 +1,254 @@
+<ion-content fullscreen class="my-matches-page">
+  <main class="my-matches-shell">
+    <header class="my-matches-header">
+      <p>Area personale</p>
+      <h1>Le mie partite</h1>
+    </header>
+
+    <section class="matches-filters" aria-label="Filtri partite">
+      <button
+        *ngFor="let filter of filters"
+        type="button"
+        class="filter-button"
+        [class.filter-button-active]="selectedFilter === filter.value"
+        (click)="selectFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    </section>
+
+    <section
+      *ngIf="visibleMatches.length > 0; else emptyState"
+      class="matches-list"
+    >
+      <article
+        *ngFor="let match of visibleMatches"
+        class="my-match-card"
+        [class.status-waiting]="match.status === 'waiting'"
+        [class.status-reserved]="match.status === 'reserved'"
+        [class.status-confirmed]="match.status === 'confirmed'"
+        [class.status-past]="match.status === 'past'"
+        [class.status-cancelled]="match.status === 'cancelled'"
+        (click)="openMatch(match.id)"
+      >
+        <div class="card-top-row">
+          <span class="status-badge">
+            <ion-icon [name]="getStatusIcon(match.status)"></ion-icon>
+            {{ match.statusLabel }}
+          </span>
+
+          <span *ngIf="match.rightLabel" class="right-label">
+            {{ match.rightLabel }}
+          </span>
+        </div>
+
+        <div class="card-main-row">
+          <div class="date-box">
+            <strong>{{ match.day }}</strong>
+            <span>{{ match.month }}</span>
+          </div>
+
+          <div class="match-info">
+            <p class="weekday">
+              {{ match.weekday }} · {{ match.timeLabel }}
+            </p>
+
+            <h2>{{ match.centerName }}</h2>
+
+            <p class="field-name">
+              {{ match.fieldName }}
+            </p>
+
+            <div class="match-meta">
+              <span>
+                <ion-icon name="football-outline"></ion-icon>
+                {{ match.type }}
+              </span>
+
+              <span>
+                <ion-icon name="wallet-outline"></ion-icon>
+                Cauzione {{ match.deposit }}€
+              </span>
+            </div>
+          </div>
+
+          <div class="side-info">
+            <ion-icon
+              class="status-icon"
+              [name]="getStatusIcon(match.status)"
+            ></ion-icon>
+          </div>
+        </div>
+
+        <div class="status-hint">
+          <p>{{ match.statusHint }}</p>
+
+          <div
+            *ngIf="match.status === 'waiting' && match.waitlistPosition"
+            class="status-detail-row"
+          >
+            <span>Posizione lista</span>
+            <strong>{{ match.waitlistPosition }}</strong>
+          </div>
+
+          <div
+            *ngIf="match.status === 'reserved'"
+            class="status-detail-row"
+          >
+            <span>Scadenza conferma</span>
+            <strong>
+              {{ match.reservationExpiresIn || 'Entro 1 ora' }}
+            </strong>
+          </div>
+        </div>
+
+        <section
+          *ngIf="match.canChoosePayment"
+          class="payment-choice-panel"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="payment-choice-header">
+            <strong>Pagamento disponibile</strong>
+            <p>Scegli come pagare la quota partita.</p>
+          </div>
+
+          <div class="payment-choice-grid">
+            <button
+              type="button"
+              class="payment-wallet-button"
+              [disabled]="match.isPaying"
+              (click)="payWithWallet(match, $event)"
+            >
+              <ion-icon name="wallet-outline"></ion-icon>
+              {{ match.isPaying ? 'Pagamento...' : 'Paga con wallet' }}
+            </button>
+
+            <button
+              type="button"
+              class="payment-onsite-button"
+              [disabled]="match.isPaying"
+              (click)="payOnSite(match, $event)"
+            >
+              Pago sul campo
+            </button>
+          </div>
+        </section>
+
+        <section
+          *ngIf="match.canLateCancel"
+          class="late-cancel-panel"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="late-cancel-copy">
+            <strong>Emergenza?</strong>
+            <p>
+              Se non puoi più partecipare, puoi uscire ora lasciando una
+              motivazione. Perderai punti affidabilità e la cauzione verrà
+              trattenuta automaticamente.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="late-cancel-button"
+            [disabled]="match.isLateCancelling"
+            (click)="lateCancelMatch(match, $event)"
+          >
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            {{
+              match.isLateCancelling
+                ? 'Uscita in corso...'
+                : 'Non posso più partecipare'
+            }}
+          </button>
+        </section>
+
+        <p
+          *ngIf="match.errorMessage"
+          class="app-feedback app-feedback-error"
+          (click)="$event.stopPropagation()"
+        >
+          {{ match.errorMessage }}
+        </p>
+
+        <p
+          *ngIf="match.successMessage"
+          class="app-feedback app-feedback-success"
+          (click)="$event.stopPropagation()"
+        >
+          {{ match.successMessage }}
+        </p>
+
+        <section
+          *ngIf="match.action === 'confirmPresence'"
+          class="payment-choice-panel"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="payment-choice-header">
+            <strong>Posto riservato</strong>
+            <p>
+              Puoi confermare la presenza oppure liberare subito il posto se non
+              puoi più partecipare.
+            </p>
+          </div>
+
+          <div class="payment-choice-grid">
+            <button
+              type="button"
+              class="payment-wallet-button"
+              [disabled]="match.isConfirming"
+              (click)="confirmPresence(match, $event)"
+            >
+              {{
+                match.isConfirming
+                  ? 'Conferma in corso...'
+                  : match.actionLabel
+              }}
+            </button>
+
+            <button
+              type="button"
+              class="payment-onsite-button"
+              [disabled]="match.isConfirming"
+              (click)="declineReservedSpot(match, $event)"
+            >
+              Ho un impegno
+            </button>
+          </div>
+        </section>
+
+        <button
+          *ngIf="match.canLeave"
+          type="button"
+          class="confirm-presence-button leave-match-button"
+          [disabled]="match.isLeaving"
+          (click)="leaveMatch(match, $event)"
+        >
+          {{ match.isLeaving ? 'Uscita in corso...' : 'Esci dalla partita' }}
+        </button>
+
+        <button
+          *ngIf="match.canManage"
+          type="button"
+          class="manage-match-button"
+          (click)="openMatchManagement(match, $event)"
+        >
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          Gestione partita
+        </button>
+      </article>
+    </section>
+
+    <ng-template #emptyState>
+      <section class="empty-state">
+        <div class="empty-icon">
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
+
+        <h2>{{ getEmptyTitle() }}</h2>
+
+        <p>{{ getEmptyText() }}</p>
+      </section>
+    </ng-template>
+  </main>
+</ion-content>

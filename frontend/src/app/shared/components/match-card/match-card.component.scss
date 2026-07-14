@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.match-card {
+  width: 100%;
+  min-height: 108px;
+
+  display: grid;
+  grid-template-columns: 96px 1fr;
+
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+
+  padding: 0;
+  background: var(--app-card);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.24);
+
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+
+  &:active {
+    transform: scale(0.985);
+  }
+}
+
+.match-image {
+  background-size: cover;
+  background-position: center;
+  background-color: var(--app-bg-soft);
+}
+
+.match-content {
+  min-width: 0;
+  padding: 10px 11px 9px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.match-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+
+  p {
+    margin: 0;
+    color: var(--app-text-dark);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  strong {
+    font-weight: 900;
+  }
+}
+
+.spots-badge {
+  flex: 0 0 auto;
+
+  min-width: 48px;
+  padding: 5px 8px;
+  border-radius: 999px;
+
+  color: #081008;
+  background: var(--app-primary);
+
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.match-type {
+  margin: 4px 0 0;
+  color: var(--app-text-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.match-card h2 {
+  margin: 3px 0 0;
+
+  color: var(--app-text-dark);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.match-address {
+  margin: 3px 0 0;
+
+  color: var(--app-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.match-price {
+  align-self: flex-end;
+
+  color: var(--app-text-dark);
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+}
+
+@media (min-width: 700px) {
+  .match-card {
+    min-height: 116px;
+    grid-template-columns: 104px 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .match-card {
+    min-height: 104px;
+    grid-template-columns: 90px 1fr;
+  }
+
+  .match-content {
+    padding: 9px 10px 8px;
+    gap: 5px;
+  }
+
+  .spots-badge {
+    min-width: 46px;
+    padding-inline: 7px;
+    font-size: 10px;
+  }
+
+  .match-price {
+    font-size: 17px;
+  }
+}

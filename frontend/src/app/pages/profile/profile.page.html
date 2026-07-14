@@ -1,0 +1,280 @@
+<ion-content fullscreen class="profile-page">
+  <div class="profile-shell">
+    <header class="profile-header">
+      <button
+        type="button"
+        class="header-icon-button"
+        aria-label="Impostazioni account"
+        (click)="openAccountSettings()"
+      >
+        <ion-icon name="settings-outline"></ion-icon>
+      </button>
+
+      <h1>Il mio profilo</h1>
+
+      <button
+        type="button"
+        class="header-icon-button notification-button"
+        aria-label="Notifiche"
+        (click)="openNotifications()"
+      >
+        <ion-icon name="notifications-outline"></ion-icon>
+
+        <span
+          *ngIf="user.notificationsCount > 0"
+          class="notification-badge"
+        >
+          {{ user.notificationsCount > 9 ? '9+' : user.notificationsCount }}
+        </span>
+      </button>
+    </header>
+
+    <p
+      *ngIf="isLoadingProfile"
+      class="app-loading-text profile-loading"
+    >
+      Caricamento profilo...
+    </p>
+
+    <p
+      *ngIf="errorMessage"
+      class="app-feedback app-feedback-error profile-feedback"
+    >
+      {{ errorMessage }}
+    </p>
+
+    <section class="profile-user">
+      <div class="avatar">
+        <span>{{ userInitials }}</span>
+      </div>
+
+      <div class="profile-user-info">
+        <h2>{{ user.name }}</h2>
+
+        <p>
+          <ion-icon name="location-outline"></ion-icon>
+          <span>{{ user.location }}</span>
+        </p>
+      </div>
+    </section>
+
+    <section *ngIf="isSuspended" class="suspension-profile-card">
+      <div class="suspension-profile-icon">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+      </div>
+
+      <div class="suspension-profile-content">
+        <h3>Account sospeso dalle partite</h3>
+
+        <p>
+          Puoi continuare a usare l’app, ma non puoi creare o partecipare a
+          partite fino al:
+        </p>
+
+        <strong>
+          {{ formatDate(suspensionStatus?.suspendedUntil) }}
+        </strong>
+
+        <div class="suspension-reason-box">
+          <span>Motivo sospensione</span>
+          <p>
+            {{ suspensionStatus?.suspensionReason || 'Motivo non indicato' }}
+          </p>
+        </div>
+
+        <div *ngIf="hasOpenAppeal" class="appeal-status-box">
+          <span>Revisione richiesta</span>
+          <p>
+            La tua richiesta è stata inviata ed è in attesa di valutazione da
+            parte di un admin.
+          </p>
+        </div>
+
+        <p
+          *ngIf="appealErrorMessage"
+          class="app-feedback app-feedback-error profile-feedback"
+        >
+          {{ appealErrorMessage }}
+        </p>
+
+        <p
+          *ngIf="appealSuccessMessage"
+          class="app-feedback app-feedback-success profile-feedback"
+        >
+          {{ appealSuccessMessage }}
+        </p>
+
+        <button
+          *ngIf="canRequestAppeal && !showAppealForm"
+          type="button"
+          class="appeal-open-button"
+          (click)="openAppealForm()"
+        >
+          Chiedi revisione
+        </button>
+
+        <section *ngIf="showAppealForm" class="appeal-form">
+          <label>Spiega perché ritieni sbagliata la sospensione</label>
+
+          <textarea
+            rows="5"
+            [(ngModel)]="appealMessage"
+            placeholder="Scrivi una motivazione chiara per l’admin."
+          ></textarea>
+
+          <div class="appeal-form-actions">
+            <button
+              type="button"
+              class="appeal-cancel-button"
+              [disabled]="isSubmittingAppeal"
+              (click)="closeAppealForm()"
+            >
+              Annulla
+            </button>
+
+            <button
+              type="button"
+              class="appeal-submit-button"
+              [disabled]="isSubmittingAppeal"
+              (click)="submitAppeal()"
+            >
+              {{ isSubmittingAppeal ? 'Invio...' : 'Invia revisione' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="profile-grid">
+      <article class="reliability-card">
+        <h3>Affidabilità</h3>
+
+        <div class="reliability-icon">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+        </div>
+
+        <div class="reliability-score">
+          <span class="reliability-score-main">
+            {{ user.reliabilityScore }}
+          </span>
+
+          <span class="reliability-score-total">/100</span>
+        </div>
+
+        <p>{{ reliabilityLabel }}</p>
+
+        <div class="reliability-progress">
+          <div
+            class="reliability-progress-fill"
+            [style.width.%]="user.reliabilityScore"
+          ></div>
+        </div>
+      </article>
+
+      <section class="profile-actions-column">
+        <button
+          type="button"
+          class="profile-action-card"
+          (click)="openWallet()"
+        >
+          <span class="action-icon">
+            <ion-icon name="wallet-outline"></ion-icon>
+          </span>
+
+          <span class="action-content">
+            <strong>Wallet</strong>
+            <small>{{ formatBalance(user.walletBalance) }}</small>
+          </span>
+        </button>
+
+        <button
+          *ngIf="isAdmin"
+          type="button"
+          class="profile-action-card"
+          (click)="openAdminDashboard()"
+        >
+          <span class="action-icon">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </span>
+
+          <span class="action-content">
+            <strong>Pannello admin</strong>
+            <small>Moderazione</small>
+          </span>
+
+          <ion-icon class="action-chevron" name="chevron-forward-outline"></ion-icon>
+        </button>
+
+        <button
+          type="button"
+          class="profile-action-card"
+          (click)="openPreferredRoleSettings()"
+        >
+          <span class="action-icon">
+            <ion-icon name="walk-outline"></ion-icon>
+          </span>
+
+          <span class="action-content">
+            <strong>Ruolo preferito</strong>
+            <small>{{ preferredRoleLabel }}</small>
+          </span>
+
+          <ion-icon class="action-chevron" name="chevron-forward-outline"></ion-icon>
+        </button>
+
+        <button
+          type="button"
+          class="profile-action-card"
+          (click)="logout()"
+        >
+          <span class="action-icon">
+            <ion-icon name="exit-outline"></ion-icon>
+          </span>
+
+          <span class="action-content">
+            <strong>Esci</strong>
+          </span>
+
+          <ion-icon class="action-chevron" name="chevron-forward-outline"></ion-icon>
+        </button>
+      </section>
+    </section>
+
+    <section
+      class="premium-profile-card"
+      (click)="openPremium()"
+    >
+      <div class="premium-profile-icon">
+        <span>♛</span>
+      </div>
+
+      <div class="premium-profile-content">
+        <div class="premium-profile-title-row">
+          <h3>
+            {{ user.isPremium ? 'Premium attivo' : 'Diventa Premium' }}
+          </h3>
+
+          <span class="premium-profile-badge">
+            PREMIUM
+          </span>
+        </div>
+
+        <p>
+          {{
+            user.isPremium
+              ? 'Hai sbloccato filtri avanzati e strumenti per organizzare partite più affidabili.'
+              : 'Sblocca filtri avanzati e organizza partite più affidabili.'
+          }}
+        </p>
+
+        <button
+          type="button"
+          class="premium-profile-button"
+        >
+          {{ user.isPremium ? 'Vedi vantaggi' : 'Scopri Premium' }}
+          <span>→</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</ion-content>

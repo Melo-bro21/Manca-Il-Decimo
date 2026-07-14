@@ -1,0 +1,429 @@
+<ion-content fullscreen class="admin-dashboard-page">
+  <main class="admin-shell">
+    <header class="admin-header">
+      <div>
+        <p>Moderazione</p>
+        <h1>Pannello admin</h1>
+      </div>
+
+      <button type="button" class="profile-button" (click)="goToApp()">
+        App
+      </button>
+    </header>
+
+    <section class="admin-tabs">
+      <button
+        type="button"
+        class="admin-tab"
+        [class.admin-tab-active]="selectedTab === 'reports'"
+        (click)="selectTab('reports')"
+      >
+        Segnalazioni
+      </button>
+
+      <button
+        type="button"
+        class="admin-tab"
+        [class.admin-tab-active]="selectedTab === 'suspended'"
+        (click)="selectTab('suspended')"
+      >
+        Sospesi
+      </button>
+
+      <button
+        type="button"
+        class="admin-tab"
+        [class.admin-tab-active]="selectedTab === 'appeals'"
+        (click)="selectTab('appeals')"
+      >
+        Revisioni
+      </button>
+    </section>
+
+    <section *ngIf="errorMessage" class="feedback-card error">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <p>{{ errorMessage }}</p>
+    </section>
+
+    <section *ngIf="successMessage" class="feedback-card success">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <p>{{ successMessage }}</p>
+    </section>
+
+    <section class="quick-actions">
+      <button type="button" class="refresh-button" (click)="refresh()">
+        <ion-icon name="refresh-outline"></ion-icon>
+        Aggiorna
+      </button>
+    </section>
+
+    <ng-container *ngIf="selectedTab === 'reports'">
+      <section class="status-filters">
+        <button
+          *ngFor="let status of reportStatuses"
+          type="button"
+          class="status-filter"
+          [class.status-filter-active]="selectedStatus === status.value"
+          (click)="selectStatus(status.value)"
+        >
+          {{ status.label }}
+        </button>
+      </section>
+
+      <section *ngIf="isLoadingReports" class="empty-state">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <h2>Caricamento segnalazioni...</h2>
+        <p>Stiamo recuperando i casi da valutare.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingReports && reports.length === 0"
+        class="empty-state"
+      >
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <h2>Nessuna segnalazione</h2>
+        <p>Non ci sono segnalazioni in questa sezione.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingReports && reports.length > 0"
+        class="reports-list"
+      >
+        <article *ngFor="let report of reports" class="report-card">
+          <div class="report-top">
+            <span class="report-status">
+              {{ getStatusLabel(report.status) }}
+            </span>
+
+            <span class="report-date">
+              {{ formatDate(report.createdAt) }}
+            </span>
+          </div>
+
+          <section class="report-main">
+            <h2>{{ getReasonLabel(report.reason) }}</h2>
+
+            <p class="description">
+              {{
+                report.description ||
+                  'Nessuna descrizione fornita dal creator.'
+              }}
+            </p>
+          </section>
+
+          <section class="report-info-grid">
+            <div>
+              <span>Segnalato</span>
+              <strong>{{ getUserName(report.reportedUser) }}</strong>
+            </div>
+
+            <div>
+              <span>Segnalato da</span>
+              <strong>{{ getUserName(report.reporter) }}</strong>
+            </div>
+
+            <div>
+              <span>Partita</span>
+              <strong>
+                {{ report.match?.title || 'Partita non disponibile' }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Data partita</span>
+              <strong>{{ formatMatchDate(report.match?.startsAt) }}</strong>
+            </div>
+
+            <div>
+              <span>Centro</span>
+              <strong>
+                {{
+                  report.match?.field?.sportsCenter?.name ||
+                    'Centro non indicato'
+                }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Affidabilità</span>
+              <strong>
+                {{ report.reportedUser?.reliabilityScore ?? 'N/D' }}
+              </strong>
+            </div>
+          </section>
+
+          <section
+            *ngIf="report.reportedUser?.suspendedUntil"
+            class="suspended-warning"
+          >
+            <ion-icon name="ban-outline"></ion-icon>
+            <p>
+              Utente già sospeso fino al
+              {{ formatDate(report.reportedUser?.suspendedUntil) }}.
+            </p>
+          </section>
+
+          <section
+            *ngIf="report.status === 'OPEN'"
+            class="report-actions"
+          >
+            <button
+              type="button"
+              class="ignore-button"
+              [disabled]="isActionLoading"
+              (click)="ignoreReport(report)"
+            >
+              Ignora
+            </button>
+
+            <button
+              type="button"
+              class="resolve-button"
+              [disabled]="isActionLoading"
+              (click)="resolveReport(report)"
+            >
+              Chiudi senza sospensione
+            </button>
+          </section>
+
+          <section
+            *ngIf="report.status === 'OPEN'"
+            class="suspension-panel"
+          >
+            <p>Sospendi dalle partite</p>
+
+            <div class="suspension-grid">
+              <button
+                *ngFor="let days of suspensionDays"
+                type="button"
+                [disabled]="isActionLoading"
+                (click)="suspendFromReport(report, days)"
+              >
+                {{ days === 365 ? '1 anno' : days + 'g' }}
+              </button>
+            </div>
+          </section>
+
+          <section
+            *ngIf="report.status !== 'OPEN'"
+            class="closed-report-info"
+          >
+            <p>
+              Chiusa il {{ formatDate(report.resolvedAt) }}
+              <span *ngIf="report.resolvedByAdmin">
+                da {{ getUserName(report.resolvedByAdmin) }}
+              </span>
+            </p>
+
+            <strong *ngIf="report.adminNote">
+              Nota admin: {{ report.adminNote }}
+            </strong>
+          </section>
+        </article>
+      </section>
+    </ng-container>
+
+    <ng-container *ngIf="selectedTab === 'suspended'">
+      <section *ngIf="isLoadingSuspendedUsers" class="empty-state">
+        <ion-icon name="time-outline"></ion-icon>
+        <h2>Caricamento sospesi...</h2>
+        <p>Stiamo recuperando gli utenti sospesi.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingSuspendedUsers && suspendedUsers.length === 0"
+        class="empty-state"
+      >
+        <ion-icon name="people-outline"></ion-icon>
+        <h2>Nessun utente sospeso</h2>
+        <p>Qui compariranno gli utenti sospesi dalle partite.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingSuspendedUsers && suspendedUsers.length > 0"
+        class="suspended-list"
+      >
+        <article *ngFor="let user of suspendedUsers" class="suspended-card">
+          <div>
+            <h2>{{ user.name || user.email }}</h2>
+            <p>{{ user.email }}</p>
+          </div>
+
+          <section class="suspended-meta">
+            <div>
+              <span>Sospeso fino al</span>
+              <strong>{{ formatDate(user.suspendedUntil) }}</strong>
+            </div>
+
+            <div>
+              <span>Motivo</span>
+              <strong>
+                {{ user.suspensionReason || 'Motivo non indicato' }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Affidabilità</span>
+              <strong>{{ user.reliabilityScore }}</strong>
+            </div>
+          </section>
+
+          <button
+            type="button"
+            class="unsuspend-button"
+            [disabled]="isActionLoading"
+            (click)="unsuspendUser(user)"
+          >
+            Rimuovi sospensione
+          </button>
+        </article>
+      </section>
+    </ng-container>
+
+    <ng-container *ngIf="selectedTab === 'appeals'">
+      <section class="status-filters">
+        <button
+          *ngFor="let status of appealStatuses"
+          type="button"
+          class="status-filter"
+          [class.status-filter-active]="selectedAppealStatus === status.value"
+          (click)="selectAppealStatus(status.value)"
+        >
+          {{ status.label }}
+        </button>
+      </section>
+
+      <section *ngIf="isLoadingAppeals" class="empty-state">
+        <ion-icon name="time-outline"></ion-icon>
+        <h2>Caricamento revisioni...</h2>
+        <p>Stiamo recuperando le richieste degli utenti sospesi.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingAppeals && appeals.length === 0"
+        class="empty-state"
+      >
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <h2>Nessuna revisione</h2>
+        <p>Non ci sono richieste di revisione in questa sezione.</p>
+      </section>
+
+      <section
+        *ngIf="!isLoadingAppeals && appeals.length > 0"
+        class="reports-list"
+      >
+        <article *ngFor="let appeal of appeals" class="report-card appeal-card">
+          <div class="report-top">
+            <span class="report-status">
+              {{ getAppealStatusLabel(appeal.status) }}
+            </span>
+
+            <span class="report-date">
+              {{ formatDate(appeal.createdAt) }}
+            </span>
+          </div>
+
+          <section class="report-main">
+            <h2>Richiesta revisione sospensione</h2>
+
+            <p class="description">
+              {{ appeal.message }}
+            </p>
+          </section>
+
+          <section class="report-info-grid">
+            <div>
+              <span>Utente</span>
+              <strong>{{ getAppealUserName(appeal.user) }}</strong>
+            </div>
+
+            <div>
+              <span>Sospeso fino al</span>
+              <strong>{{ formatDate(appeal.user?.suspendedUntil) }}</strong>
+            </div>
+
+            <div>
+              <span>Motivo sospensione</span>
+              <strong>
+                {{ appeal.user?.suspensionReason || 'Motivo non indicato' }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Affidabilità</span>
+              <strong>{{ appeal.user?.reliabilityScore ?? 'N/D' }}</strong>
+            </div>
+
+            <div>
+              <span>Segnalazione originale</span>
+              <strong>
+                {{
+                  appeal.playerReport
+                    ? getReasonLabel(appeal.playerReport.reason)
+                    : 'Non collegata'
+                }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Partita</span>
+              <strong>
+                {{
+                  appeal.playerReport?.match?.title ||
+                    'Partita non disponibile'
+                }}
+              </strong>
+            </div>
+          </section>
+
+          <section
+            *ngIf="appeal.playerReport?.description"
+            class="closed-report-info"
+          >
+            <p>Descrizione segnalazione originale</p>
+            <strong>{{ appeal.playerReport?.description }}</strong>
+          </section>
+
+          <section
+            *ngIf="appeal.status === 'OPEN'"
+            class="appeal-actions"
+          >
+            <button
+              type="button"
+              class="reject-appeal-button"
+              [disabled]="isActionLoading"
+              (click)="rejectAppeal(appeal)"
+            >
+              Respingi revisione
+            </button>
+
+            <button
+              type="button"
+              class="approve-appeal-button"
+              [disabled]="isActionLoading"
+              (click)="approveAppeal(appeal)"
+            >
+              Accogli e riattiva
+            </button>
+          </section>
+
+          <section
+            *ngIf="appeal.status !== 'OPEN'"
+            class="closed-report-info"
+          >
+            <p>
+              Valutata il {{ formatDate(appeal.resolvedAt) }}
+              <span *ngIf="appeal.resolvedByAdmin">
+                da {{ getAppealUserName(appeal.resolvedByAdmin) }}
+              </span>
+            </p>
+
+            <strong *ngIf="appeal.adminNote">
+              Nota admin: {{ appeal.adminNote }}
+            </strong>
+          </section>
+        </article>
+      </section>
+    </ng-container>
+  </main>
+</ion-content>

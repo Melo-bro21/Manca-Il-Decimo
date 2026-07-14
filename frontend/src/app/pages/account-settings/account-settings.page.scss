@@ -1,0 +1,598 @@
+.account-settings-page {
+  --settings-bg: #fbf8ff;
+  --settings-card: #ffffff;
+  --settings-purple: #7038ff;
+  --settings-purple-dark: #25134f;
+  --settings-purple-soft: rgba(112, 56, 255, 0.1);
+  --settings-lime: #c9ff35;
+  --settings-lime-dark: #69c900;
+  --settings-text: #161026;
+  --settings-muted: #7b728f;
+  --settings-border: rgba(112, 56, 255, 0.18);
+
+  --background:
+    radial-gradient(
+      circle at 94% 24%,
+      rgba(112, 56, 255, 0.13),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 7% 68%,
+      rgba(201, 255, 53, 0.18),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #fffbff 0%, #f7f0ff 50%, #ffffff 100%);
+}
+
+.account-settings-shell {
+  position: relative;
+
+  width: 100%;
+  max-width: 980px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 28px 18px 120px;
+
+  color: var(--settings-text);
+}
+
+.account-settings-shell::before {
+  content: '';
+  position: fixed;
+  right: -170px;
+  top: 92px;
+
+  width: 390px;
+  height: 390px;
+  border-radius: 50%;
+  border: 42px solid rgba(112, 56, 255, 0.045);
+
+  pointer-events: none;
+}
+
+.account-settings-shell::after {
+  content: '';
+  position: fixed;
+  left: -92px;
+  top: 155px;
+
+  width: 210px;
+  height: 210px;
+
+  background:
+    radial-gradient(circle, rgba(112, 56, 255, 0.14) 1px, transparent 1px);
+  background-size: 13px 13px;
+  opacity: 0.48;
+
+  pointer-events: none;
+}
+
+.account-settings-header {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+  align-items: center;
+  gap: 14px;
+
+  margin-bottom: 28px;
+}
+
+.account-settings-title {
+  text-align: center;
+
+  h1 {
+    margin: 0;
+
+    color: var(--settings-purple-dark);
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 950;
+    letter-spacing: -0.055em;
+  }
+
+  p {
+    max-width: 380px;
+    margin: 8px auto 0;
+
+    color: var(--settings-muted);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.35;
+  }
+}
+
+.back-button,
+.header-spacer {
+  width: 46px;
+  height: 46px;
+}
+
+.back-button {
+  border: 0;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--settings-purple-dark);
+
+  border: 1px solid rgba(112, 56, 255, 0.1);
+  box-shadow: 0 12px 28px rgba(37, 19, 79, 0.08);
+
+  cursor: pointer;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+
+  ion-icon {
+    font-size: 25px;
+  }
+}
+
+.back-button:hover {
+  background: var(--settings-purple);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(112, 56, 255, 0.22);
+}
+
+.account-settings-layout {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.settings-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-panel,
+.settings-action-panel {
+  border-radius: 28px;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--settings-text);
+
+  border: 1.5px solid var(--settings-border);
+
+  box-shadow:
+    0 24px 56px rgba(48, 24, 112, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.settings-panel {
+  padding: 24px 22px 22px;
+
+  h2 {
+    margin: 0 0 18px;
+
+    color: var(--settings-purple-dark);
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 950;
+    letter-spacing: -0.065em;
+  }
+}
+
+.personal-panel {
+  min-height: 100%;
+}
+
+.security-panel {
+  padding-bottom: 18px;
+}
+
+.settings-field {
+  min-height: 78px;
+  border-radius: 22px;
+  padding: 12px 14px;
+  border: 1.5px solid transparent;
+
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 14px;
+
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 255, 0.66));
+
+  transition:
+    border-color 170ms ease,
+    box-shadow 170ms ease,
+    background 170ms ease,
+    transform 170ms ease;
+
+  & + & {
+    margin-top: 12px;
+  }
+}
+
+.settings-field:hover {
+  border-color: rgba(112, 56, 255, 0.24);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(112, 56, 255, 0.08);
+}
+
+.settings-field-error {
+  border-color: #ff4d4f;
+  background: #fff7f7;
+  box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.1);
+}
+
+.settings-field-highlight {
+  border-color: var(--settings-purple);
+  box-shadow: 0 0 0 4px rgba(112, 56, 255, 0.12);
+}
+
+.settings-field-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--settings-lime-dark);
+  background: rgba(201, 255, 53, 0.18);
+
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+.security-icon {
+  color: var(--settings-purple);
+  background: var(--settings-purple-soft);
+}
+
+.settings-field-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.settings-field-label {
+  color: var(--settings-purple-dark);
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: -0.025em;
+}
+
+.required-star {
+  color: #ff4d4f;
+  font-weight: 950;
+}
+
+.settings-field-helper {
+  color: var(--settings-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.settings-field input,
+.settings-field select {
+  width: 100%;
+  border: 0;
+  padding: 0;
+
+  background: transparent;
+  color: var(--settings-muted);
+
+  font-size: 14px;
+  font-weight: 850;
+  outline: none;
+}
+
+.settings-field select {
+  min-height: 24px;
+  appearance: auto;
+  color-scheme: light;
+}
+
+.settings-field select option {
+  background: #ffffff;
+  color: var(--settings-text);
+}
+
+.settings-field input::placeholder {
+  color: rgba(123, 114, 143, 0.72);
+}
+
+.settings-action-panel {
+  padding: 18px;
+}
+
+.settings-feedback {
+  margin: 0 0 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.save-button {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-radius: 999px;
+
+  background: var(--settings-lime);
+  color: var(--settings-purple-dark);
+
+  font-size: 15px;
+  font-weight: 950;
+
+  box-shadow: 0 14px 30px rgba(201, 255, 53, 0.32);
+
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(201, 255, 53, 0.38);
+}
+
+.cancel-button {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 999px;
+
+  background: transparent;
+  color: var(--settings-muted);
+
+  font-size: 14px;
+  font-weight: 950;
+
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  color: var(--settings-purple);
+}
+
+.save-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.account-settings-loading {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 14px;
+  color: var(--settings-muted);
+}
+
+@media (max-width: 880px) {
+  .account-settings-shell {
+    max-width: 520px;
+    padding: 24px 14px 118px;
+  }
+
+  .account-settings-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .settings-panel,
+  .settings-action-panel {
+    border-radius: 26px;
+  }
+}
+
+@media (max-width: 420px) {
+  .account-settings-header {
+    grid-template-columns: 42px 1fr 42px;
+  }
+
+  .back-button,
+  .header-spacer {
+    width: 42px;
+    height: 42px;
+  }
+
+  .account-settings-title {
+    h1 {
+      font-size: 18px;
+    }
+
+    p {
+      font-size: 12px;
+    }
+  }
+
+  .settings-panel {
+    padding: 20px 16px 18px;
+
+    h2 {
+      font-size: 22px;
+    }
+  }
+
+  .settings-field {
+    min-height: 74px;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    padding: 11px 12px;
+  }
+
+  .settings-field-icon {
+    width: 42px;
+    height: 42px;
+
+    ion-icon {
+      font-size: 22px;
+    }
+  }
+}
+
+
+
+@media (min-width: 881px) {
+  .account-settings-shell {
+    max-width: 860px;
+    padding: 22px 14px 104px;
+  }
+
+  .account-settings-header {
+    grid-template-columns: 42px 1fr 42px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .account-settings-title {
+    h1 {
+      font-size: 19px;
+    }
+
+    p {
+      max-width: 340px;
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+  }
+
+  .back-button,
+  .header-spacer {
+    width: 42px;
+    height: 42px;
+  }
+
+  .back-button {
+    ion-icon {
+      font-size: 22px;
+    }
+  }
+
+  .account-settings-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+    gap: 16px;
+  }
+
+  .settings-right-column {
+    gap: 12px;
+  }
+
+  .settings-panel,
+  .settings-action-panel {
+    border-radius: 24px;
+  }
+
+  .settings-panel {
+    padding: 20px 18px 18px;
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 21px;
+    }
+  }
+
+  .security-panel {
+    padding-bottom: 16px;
+  }
+
+  .settings-field {
+    min-height: 66px;
+    border-radius: 18px;
+    padding: 10px 12px;
+
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+
+    & + & {
+      margin-top: 10px;
+    }
+  }
+
+  .settings-field-icon {
+    width: 40px;
+    height: 40px;
+
+    ion-icon {
+      font-size: 21px;
+    }
+  }
+
+  .settings-field-content {
+    gap: 4px;
+  }
+
+  .settings-field-label {
+    font-size: 12.5px;
+  }
+
+  .settings-field-helper {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .settings-field input,
+  .settings-field select {
+    font-size: 12.5px;
+  }
+
+  .settings-field select {
+    min-height: 22px;
+  }
+
+  .settings-action-panel {
+    padding: 15px;
+  }
+
+  .save-button {
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .cancel-button {
+    min-height: 34px;
+    margin-top: 6px;
+    font-size: 12.5px;
+  }
+
+  .settings-feedback {
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+
+  .account-settings-shell::before {
+    width: 330px;
+    height: 330px;
+    right: -145px;
+    top: 82px;
+    border-width: 35px;
+  }
+
+  .account-settings-shell::after {
+    width: 175px;
+    height: 175px;
+    left: -76px;
+    top: 145px;
+    background-size: 12px 12px;
+  }
+}
