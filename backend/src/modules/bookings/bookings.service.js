@@ -458,42 +458,78 @@ async function confirmAttendance({ organizerId, bookingId }) {
   });
 }
 
-// 2. MARK NO SHOW (Chi non si è presentato)
 async function markNoShow({ organizerId, bookingId }) {
   const booking = await bookingsRepository.findBookingById(bookingId);
-  if (!booking) throw new AppError("Booking not found", 404);
-  if (booking.match.creatorId !== organizerId) throw new AppError("Non autorizzato", 403);
-  if (booking.status !== "ACTIVE") throw new AppError("Booking non attivo", 400);
+
+  if (!booking) {
+    throw new AppError("Booking non trovato", 404);
+  }
+
+  if (booking.match.creatorId !== organizerId) {
+    throw new AppError(
+      "Non sei autorizzato a segnare questa assenza",
+      403
+    );
+  }
+
+  if (booking.status !== "ACTIVE") {
+    throw new AppError("Booking non attivo", 400);
+  }
 
   ensureMatchHasStartedForAttendance(booking.match);
   ensureAttendanceIsStillManageable(booking);
 
-  // Manteniamo la penalità in punti affidabilità (fondamentale per il sistema meritocratico!)
   const result = await prisma.$transaction(async (tx) => {
-    await tx.user.update({
-      where: { id: booking.userId },
-      data: { reliabilityScore: { decrement: 5 } },
-    });
-
-    await tx.penalty.create({
-      data: {
-        userId: booking.userId,
-        matchId: booking.matchId,
-        bookingId: booking.id,
-        type: "NO_SHOW",
-        points: -5,
-        reason: "Utente assente alla partita",
+    const updatedBooking = await tx.booking.update({
+      where: {
+        id: bookingId,
       },
-    });
-
-    return tx.booking.update({
-      where: { id: bookingId },
       data: {
         attendanceStatus: "NO_SHOW",
-        depositStatus: "NONE", // Nessuna cauzione da trattenere
+
+        /*
+         * Questo campo appartiene ancora al vecchio schema.
+         * Lo manteniamo temporaneamente neutro finché non verrà
+         * eliminato con la migrazione dedicata alla cauzione.
+         */
+        depositStatus: "NONE",
       },
-      include: { match: true, user: true },
+      include: {
+        match: true,
+        user: true,
+      },
     });
+
+    const redCardResult =
+      await disciplinaryCardsService.issueRedCard({
+        recipientId: booking.userId,
+        issuedById: organizerId,
+        matchId: booking.matchId,
+        bookingId: booking.id,
+        reason:
+          disciplinaryCardsService.CARD_REASONS.NO_SHOW,
+        note: `Assenza registrata alla partita "${booking.match.title}"`,
+        db: tx,
+      });
+
+    return {
+      booking: updatedBooking,
+      redCard: redCardResult.card,
+      redCardAlreadyExisted:
+        redCardResult.alreadyExisted,
+    };
+  });
+
+  await notificationsService.createNotification({
+    userId: booking.userId,
+    type: "RED_CARD_RECEIVED",
+    title: "Cartellino rosso ricevuto",
+    message:
+      `Sei stato segnato assente alla partita ` +
+      `"${booking.match.title}". Hai ricevuto un cartellino rosso ` +
+      "e non puoi creare o partecipare a partite finché resterà attivo.",
+    matchId: booking.match.id,
+    bookingId: booking.id,
   });
 
   return result;
