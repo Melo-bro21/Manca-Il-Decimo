@@ -158,7 +158,7 @@ async function createMatch({ creatorId, matchData }) {
     durationMinutes,
     maxPlayers,
     pricePerPlayer,
-    depositAmount,
+    // DEPOSIT REMOVED: depositAmount rimosso
     onlyReliableUsers,
     minReliabilityScore,
     requiresApproval,
@@ -166,48 +166,25 @@ async function createMatch({ creatorId, matchData }) {
   } = matchData;
 
   const creator = await prisma.user.findUnique({
-    where: {
-      id: creatorId,
-    },
+    where: { id: creatorId },
   });
 
-  if (!creator) {
-    throw new AppError("Creator not found", 404);
-  }
+  if (!creator) throw new AppError("Creator not found", 404);
 
   const field = await prisma.field.findUnique({
-    where: {
-      id: fieldId,
-    },
+    where: { id: fieldId },
   });
 
-  if (!field) {
-    throw new AppError("Field not found", 404);
-  }
+  if (!field) throw new AppError("Field not found", 404);
 
   const matchDate = new Date(startsAt);
+  if (Number.isNaN(matchDate.getTime())) throw new AppError("Invalid match date", 400);
+  if (matchDate <= new Date()) throw new AppError("Match date must be in the future", 400);
 
-  if (Number.isNaN(matchDate.getTime())) {
-    throw new AppError("Invalid match date", 400);
-  }
-
-  if (matchDate <= new Date()) {
-    throw new AppError("Match date must be in the future", 400);
-  }
-
-  await ensureFieldIsAvailable({
-    fieldId,
-    startsAt: matchDate,
-    durationMinutes,
-  });
+  await ensureFieldIsAvailable({ fieldId, startsAt: matchDate, durationMinutes });
 
   const normalizedGuests = normalizeGuests(guests);
-
-  ensureGuestsAreValid({
-    creator,
-    guests: normalizedGuests,
-    maxPlayers,
-  });
+  ensureGuestsAreValid({ creator, guests: normalizedGuests, maxPlayers });
 
   const wantsPremiumOptions =
     requiresApproval === true ||
@@ -215,26 +192,14 @@ async function createMatch({ creatorId, matchData }) {
     minReliabilityScore !== undefined;
 
   if (wantsPremiumOptions && !creator.isPremium) {
-    throw new AppError(
-      "Only premium users can create matches with advanced options",
-      403
-    );
+    throw new AppError("Only premium users can create matches with advanced options", 403);
   }
 
   const usesReliabilityFilter = onlyReliableUsers === true;
+  const cleanMinReliabilityScore = usesReliabilityFilter ? (minReliabilityScore ?? 0) : null;
 
-  const cleanMinReliabilityScore = usesReliabilityFilter
-    ? minReliabilityScore ?? 0
-    : null;
-
-  if (
-    usesReliabilityFilter &&
-    (cleanMinReliabilityScore < 0 || cleanMinReliabilityScore > 100)
-  ) {
-    throw new AppError(
-      "Il punteggio minimo di affidabilità deve essere compreso tra 0 e 100",
-      400
-    );
+  if (usesReliabilityFilter && (cleanMinReliabilityScore < 0 || cleanMinReliabilityScore > 100)) {
+    throw new AppError("Il punteggio minimo di affidabilità deve essere compreso tra 0 e 100", 400);
   }
 
   const currentPlayers = 1 + normalizedGuests.length;
@@ -250,19 +215,12 @@ async function createMatch({ creatorId, matchData }) {
     maxPlayers,
     currentPlayers,
     pricePerPlayer,
-    depositAmount,
+    // DEPOSIT REMOVED: non inviamo più depositAmount al DB
     status,
-
     onlyReliableUsers: usesReliabilityFilter,
     minReliabilityScore: cleanMinReliabilityScore,
     requiresApproval: requiresApproval || false,
-
-    guests:
-      normalizedGuests.length > 0
-        ? {
-            create: normalizedGuests,
-          }
-        : undefined,
+    guests: normalizedGuests.length > 0 ? { create: normalizedGuests } : undefined,
   });
 
   return match;

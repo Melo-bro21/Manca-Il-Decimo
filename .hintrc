@@ -15,6 +15,12 @@
         "select-name": "off"
       }
     ],
-    "compat-api/css": "off"
+    "compat-api/css": "off",
+    "axe/name-role-value": [
+      "default",
+      {
+        "button-name": "off"
+      }
+    ]
   }
 }

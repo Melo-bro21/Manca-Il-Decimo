@@ -4,19 +4,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  arrowBackOutline,
-  cardOutline,
-  calendarOutline,
-  shieldCheckmarkOutline,
-  walletOutline,
-} from 'ionicons/icons';
+import { arrowBackOutline, calendarOutline } from 'ionicons/icons';
 
-import {
-  BookingsService,
-  JoinSummary,
-} from '../../core/services/bookings.service';
-import { Match } from '../../core/services/matches.service';
+import { BookingsService } from '../../core/services/bookings.service';
 
 interface CheckoutMatch {
   id: number;
@@ -24,13 +14,6 @@ interface CheckoutMatch {
   time: string;
   centerName: string;
   type: string;
-  deposit: number;
-  pricePerPlayer: number;
-}
-
-interface CheckoutWallet {
-  balance: number;
-  balanceAfterDeposit: number;
 }
 
 @Component({
@@ -41,14 +24,14 @@ interface CheckoutWallet {
   imports: [CommonModule, IonContent, IonIcon],
 })
 export class CheckoutPage {
+  // Variabili di stato
   matchId = 0;
-
   isLoading = false;
   isConfirming = false;
-
   successMessage = '';
   errorMessage = '';
-
+  
+  // Variabili mancanti che causavano l'errore TS
   canJoin = false;
   cannotJoinReason: string | null = null;
 
@@ -58,13 +41,6 @@ export class CheckoutPage {
     time: '',
     centerName: '',
     type: '',
-    deposit: 0,
-    pricePerPlayer: 0,
-  };
-
-  wallet: CheckoutWallet = {
-    balance: 0,
-    balanceAfterDeposit: 0,
   };
 
   constructor(
@@ -72,186 +48,66 @@ export class CheckoutPage {
     private readonly router: Router,
     private readonly bookingsService: BookingsService
   ) {
-    addIcons({
-      arrowBackOutline,
-      cardOutline,
-      calendarOutline,
-      shieldCheckmarkOutline,
-      walletOutline,
-    });
-
-    const idFromRoute = Number(this.route.snapshot.paramMap.get('matchId'));
-    this.matchId = Number.isNaN(idFromRoute) ? 0 : idFromRoute;
-
-    this.match = {
-      ...this.match,
-      id: this.matchId,
-    };
+    addIcons({ arrowBackOutline, calendarOutline });
+    this.matchId = Number(this.route.snapshot.paramMap.get('matchId'));
   }
 
   ionViewWillEnter(): void {
-    this.loadCheckoutSummary();
+    this.loadMatchDetails();
   }
 
-  get total(): number {
-    return this.match.deposit;
-  }
-
-  get isActionDisabled(): boolean {
-    return this.isLoading || this.isConfirming || !this.canJoin;
-  }
-
-  goBack(): void {
-    this.router.navigate(['/matches', this.matchId]);
-  }
-
-  cancel(): void {
-    this.router.navigate(['/matches', this.matchId]);
-  }
+  goBack(): void { this.router.navigate(['/matches', this.matchId]); }
+  cancel(): void { this.router.navigate(['/matches', this.matchId]); }
 
   confirmJoin(): void {
-    if (this.isActionDisabled) {
-      return;
-    }
-
-    this.errorMessage = '';
-    this.successMessage = '';
     this.isConfirming = true;
-
+    this.errorMessage = '';
+    
     this.bookingsService.joinMatch(this.matchId).subscribe({
-      next: (response) => {
-        this.isConfirming = false;
-
-        this.successMessage =
-          response.message || 'Iscrizione completata con successo.';
-
-        setTimeout(() => {
-          this.router.navigate(['/tabs/my-matches']);
-        }, 900);
+      next: () => {
+        this.successMessage = 'Iscrizione completata!';
+        setTimeout(() => this.router.navigate(['/tabs/my-matches']), 900);
       },
-      error: (error: HttpErrorResponse) => {
+      error: (err) => {
         this.isConfirming = false;
-
-        this.errorMessage =
-          error.error?.message ||
-          'Non è stato possibile completare l’iscrizione. Riprova tra poco.';
-
-        this.loadCheckoutSummary();
-      },
+        this.errorMessage = err.error?.message || 'Errore iscrizione.';
+      }
     });
   }
 
-  private loadCheckoutSummary(): void {
-    if (!this.matchId) {
-      this.errorMessage = 'Partita non valida.';
-      return;
-    }
-
+private loadMatchDetails(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.successMessage = '';
 
     this.bookingsService.getJoinSummary(this.matchId).subscribe({
-      next: (response) => {
+      next: (response: any) => {
+        // I dati sono dentro response.data
+        const m = response.data?.match; 
+        const ps = response.data?.paymentSummary;
+
+        if (!m) {
+          this.errorMessage = "Errore: partita non trovata nei dati.";
+          this.isLoading = false;
+          return;
+        }
+
+        const startsAt = new Date(m.startsAt);
+        this.match = {
+          id: m.id,
+          dayLabel: startsAt.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }),
+          time: startsAt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+          centerName: m.field?.sportsCenter?.name || 'Centro sportivo',
+          type: `${m.field?.sportType || 'Calcetto'} · ${m.field?.size || ''}`
+        };
+
+        this.canJoin = ps ? ps.canJoin : true;
         this.isLoading = false;
-
-        this.applyJoinSummary(response.data);
       },
-      error: (error: HttpErrorResponse) => {
+      error: (err) => {
+        console.error("Errore di rete:", err);
         this.isLoading = false;
-
-        this.errorMessage =
-          error.error?.message ||
-          'Non è stato possibile caricare il riepilogo iscrizione.';
-      },
+        this.errorMessage = 'Errore di comunicazione col server.';
+      }
     });
-  }
-
-  private applyJoinSummary(summary: JoinSummary): void {
-    this.match = this.mapMatchToCheckout(summary.match);
-
-    this.wallet = {
-      balance: summary.paymentSummary.currentBalance,
-      balanceAfterDeposit: summary.paymentSummary.balanceAfterDeposit,
-    };
-
-    this.canJoin = summary.paymentSummary.canJoin;
-    this.cannotJoinReason = summary.paymentSummary.reason;
-
-    if (!this.canJoin && this.cannotJoinReason) {
-      this.errorMessage = this.cannotJoinReason;
-    }
-  }
-
-  private mapMatchToCheckout(match: Match): CheckoutMatch {
-    const startsAt = new Date(match.startsAt);
-
-    const centerName =
-      match.field?.sportsCenter?.name || 'Centro sportivo non indicato';
-
-    const sportType = match.field?.sportType || 'Calcetto';
-    const size = match.field?.size || this.getSizeFromMaxPlayers(match.maxPlayers);
-
-    return {
-      id: match.id,
-      dayLabel: this.formatDayLabel(startsAt),
-      time: this.formatTime(startsAt),
-      centerName,
-      type: `${sportType} · ${size}`,
-      deposit: match.depositAmount,
-      pricePerPlayer: match.pricePerPlayer,
-    };
-  }
-
-  private formatDayLabel(date: Date): string {
-    const today = new Date();
-    const tomorrow = new Date();
-
-    tomorrow.setDate(today.getDate() + 1);
-
-    if (this.isSameDay(date, today)) {
-      return 'Oggi';
-    }
-
-    if (this.isSameDay(date, tomorrow)) {
-      return 'Domani';
-    }
-
-    return date.toLocaleDateString('it-IT', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-    });
-  }
-
-  private formatTime(date: Date): string {
-    return date.toLocaleTimeString('it-IT', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  private isSameDay(firstDate: Date, secondDate: Date): boolean {
-    return (
-      firstDate.getFullYear() === secondDate.getFullYear() &&
-      firstDate.getMonth() === secondDate.getMonth() &&
-      firstDate.getDate() === secondDate.getDate()
-    );
-  }
-
-  private getSizeFromMaxPlayers(maxPlayers: number): string {
-    if (maxPlayers === 10) {
-      return '5vs5';
-    }
-
-    if (maxPlayers === 12) {
-      return '6vs6';
-    }
-
-    if (maxPlayers === 14) {
-      return '7vs7';
-    }
-
-    return `${maxPlayers} giocatori`;
-  }
+  } 
 }

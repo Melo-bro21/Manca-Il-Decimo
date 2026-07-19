@@ -65,6 +65,7 @@ model SportsCenter {
  owner            User?     @relation("CenterOwner", fields: [ownerId], references: [id])
  
  stripeAccountId  String?   @unique // L'ID Stripe Connect per inviare i soldi al centro
+ isOnboarded     Boolean  @default(false) // <--- AGGIUNGI QUESTA RIGA
 
  fields           Field[] 
 

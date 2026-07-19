@@ -1,4 +1,5 @@
 const sportsCenterService = require('./sports-centers.service');
+const stripeService = require('../../shared/stripe.service');
 
 async function  getAllSportsCenter(req,res,next) {
  try 
@@ -61,9 +62,41 @@ async function createSportsCenter(req, res, next) {
   }
 }
 
+async function onboardSportsCenter(req, res, next) {
+  try {
+    const { sportsCenterId } = req.body;
+
+    // 1. Verifichiamo che il centro appartenga davvero a chi lo sta configurando
+    const sportsCenter = await sportsCenterService.getSportsCenterById(sportsCenterId);
+    if (sportsCenter.ownerId !== req.user.id) {
+      return res.status(403).json({ message: "Non sei il proprietario di questo centro" });
+    }
+
+    // 2. Generiamo il link di onboarding con Stripe
+    // Usiamo l'email dell'utente e l'URL di ritorno (il tuo frontend)
+    const { accountId, url } = await stripeService.createOnboardingLink(
+      req.user.email, 
+      process.env.FRONTEND_URL 
+    );
+
+    // 3. Salviamo l'ID dell'account Stripe nel database del centro sportivo
+    await sportsCenterService.updateSportsCenter(sportsCenterId, { 
+      stripeAccountId: accountId 
+    });
+
+    // 4. Mandiamo l'URL al frontend, così reindirizziamo il proprietario
+    res.status(200).json({ url });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ... aggiungi onboardSportsCenter al tuo module.exports esistente
+
 module.exports= {
     getAllSportsCenter,
     getSportsCenterById,
     getFieldsBySportsCenterId,
     createSportsCenter,
+    onboardSportsCenter, // <-- aggiunto qui
 };

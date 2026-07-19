@@ -26,7 +26,6 @@ function getMatchInclude() {
             name: true,
             city: true,
             address: true,
-            distanceKm: true,
           },
         },
       },
@@ -92,8 +91,18 @@ async function findMatchById(id) {
 }
 
 async function createMatch(data) {
+  // 1. Estraiamo i guests dal resto dei dati
+  const { guests, ...matchData } = data;
+
   return prisma.match.create({
-    data,
+    data: {
+      ...matchData,
+      // 2. Forza l'inserimento di depositAmount (default a 0 se manca)
+      depositAmount: matchData.depositAmount || 0,
+      
+      // 3. Prisma vuole la sintassi { create: [...] } per le relazioni
+      guests: guests && guests.length > 0 ? { create: guests } : undefined,
+    },
     include: getMatchInclude(),
   });
 }

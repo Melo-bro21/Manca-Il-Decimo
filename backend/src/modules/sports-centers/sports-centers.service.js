@@ -1,4 +1,4 @@
-const prisma = require("../../prisma/prismaClient");
+const { prisma } = require('../../shared/prisma');
 const sportsCenterRepository = require("./sports-centers.repository");
 const { AppError } = require("../../shared/errors");
 
