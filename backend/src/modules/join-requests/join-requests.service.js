@@ -5,6 +5,9 @@ const notificationsService = require("../notifications/notifications.service");
 const { prisma } = require("../../shared/prisma");
 const { AppError } = require("../../shared/errors");
 const suspensionService = require("../../shared/suspension.service");
+const disciplinaryCardsService = require(
+  "../disciplinary-cards/disciplinary-cards.service"
+);
 
 const MAX_GOALKEEPERS_PER_MATCH = 2;
 
@@ -133,9 +136,12 @@ function ensureReliabilityRequirement(match, user) {
     );
   }
 }
-
 async function requestToJoinMatch({ userId, matchId }) {
   await suspensionService.ensureUserCanUseMatchFeatures(userId);
+
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+    userId
+  );
 
   const user = await prisma.user.findUnique({
     where: {
@@ -249,6 +255,9 @@ async function approveJoinRequest({ userId, requestId }) {
 
   await suspensionService.ensureUserCanUseMatchFeatures(userId);
   await suspensionService.ensureUserCanUseMatchFeatures(joinRequest.userId);
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+  joinRequest.userId
+);
 
   const match = await matchesRepository.findMatchById(joinRequest.matchId);
 
