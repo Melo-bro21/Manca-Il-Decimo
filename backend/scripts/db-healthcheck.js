@@ -98,7 +98,12 @@ async function main() {
   printCheck("Tabella SportsCenter", hasTable(tables, "SportsCenter"));
   printCheck("Tabella Field", hasTable(tables, "Field"));
   printCheck("Tabella Match", hasTable(tables, "Match"));
-  printCheck("Tabella Booking", hasTable(tables, "Booking"));
+  printCheck("Tabella Booking", hasTable(tables, "Booking")); 
+
+  printCheck(
+  "Tabella DisciplinaryCard",
+  hasTable(tables, "DisciplinaryCard"),
+);
 
   console.log("\nConfronto con lo schema Prisma attuale:\n");
 
@@ -149,6 +154,27 @@ async function main() {
     hasTable(tables, "Penalty"),
   );
 
+
+  printCheck(
+  "DisciplinaryCard.type",
+  hasColumn(columns, "DisciplinaryCard", "type"),
+);
+
+printCheck(
+  "DisciplinaryCard.reason",
+  hasColumn(columns, "DisciplinaryCard", "reason"),
+);
+
+printCheck(
+  "DisciplinaryCard.status",
+  hasColumn(columns, "DisciplinaryCard", "status"),
+);
+
+printCheck(
+  "DisciplinaryCard.expiresAt",
+  hasColumn(columns, "DisciplinaryCard", "expiresAt"),
+);
+
   if (hasTable(tables, "_prisma_migrations")) {
     const migrations = await prisma.$queryRaw`
       SELECT
@@ -181,6 +207,8 @@ async function main() {
   console.log(" Health check completato senza modifiche al DB");
   console.log("==============================================\n");
 }
+
+
 
 main()
   .catch((error) => {
