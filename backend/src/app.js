@@ -17,6 +17,9 @@ const notificationsRoutes = require("./modules/notifications/notifications.route
 const joinRequestsRoutes = require("./modules/join-requests/join-requests.routes");
 const playerReportsRoutes = require("./modules/player-reports/player-reports.routes");
 const suspensionAppealsRoutes = require("./modules/suspension-appeals/suspension-appeals.routes");
+const disciplinaryCardsRoutes = require(
+  "./modules/disciplinary-cards/disciplinary-cards.routes"
+);
 
 // CORREZIONE 1: Importa correttamente senza ripetere "src/"
 const webhookController = require('./modules/webhooks/webhooks.controller');
@@ -61,6 +64,7 @@ app.use("/notifications", notificationsRoutes);
 app.use("/", joinRequestsRoutes);
 app.use("/", playerReportsRoutes);
 app.use("/", suspensionAppealsRoutes);
+app.use("/disciplinary-cards", disciplinaryCardsRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
