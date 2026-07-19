@@ -9,10 +9,11 @@ const stripeService = require('../../shared/stripe.service');
 const disciplinaryCardsService = require(
   "../disciplinary-cards/disciplinary-cards.service"
 );
+const {
+  DISCIPLINARY_RULES,
+} = require("../../config/disciplinary-rules");
 
 const MAX_GOALKEEPERS_PER_MATCH = 2;
-const LATE_CANCEL_PENALTY_POINTS = 3;
-const PAYMENT_WINDOW_HOURS = 3;
 
 function normalizeRole(role) {
   if (!role) {
@@ -140,17 +141,13 @@ function isPaymentWindowOpen(match) {
   const startsAt = new Date(match.startsAt);
   const now = new Date();
 
-  const paymentOpenAt = new Date(
-    startsAt.getTime() - PAYMENT_WINDOW_HOURS * 60 * 60 * 1000
-  );
-
-  return now >= paymentOpenAt && now <= startsAt;
+  return now < startsAt;
 }
 
 function ensurePaymentWindowIsOpen(match) {
   if (!isPaymentWindowOpen(match)) {
     throw new AppError(
-      "Il pagamento sarà disponibile solo nelle 3 ore prima della partita",
+      "Non puoi effettuare il pagamento dopo l’inizio della partita",
       400
     );
   }
@@ -160,13 +157,21 @@ function ensureCanLeaveMatch(match) {
   const startsAt = new Date(match.startsAt);
   const now = new Date();
 
-  const leaveDeadline = new Date(
-    startsAt.getTime() - PAYMENT_WINDOW_HOURS * 60 * 60 * 1000
+  const emergencyExitOpenAt = new Date(
+    startsAt.getTime() -
+      DISCIPLINARY_RULES.lateCancellationWindowMinutes * 60 * 1000
   );
 
-  if (now >= leaveDeadline) {
+  if (now >= startsAt) {
     throw new AppError(
-      "Non puoi più uscire dalla partita nelle 3 ore prima dell’inizio",
+      "La partita è già iniziata. Non puoi più uscire.",
+      400
+    );
+  }
+
+  if (now >= emergencyExitOpenAt) {
+    throw new AppError(
+      "Nell’ultima ora puoi uscire soltanto tramite l’uscita di emergenza",
       400
     );
   }
@@ -560,13 +565,14 @@ function ensureLateCancellationWindowIsOpen(match) {
   const startsAt = new Date(match.startsAt);
   const now = new Date();
 
-  const lateCancelOpenAt = new Date(
-    startsAt.getTime() - PAYMENT_WINDOW_HOURS * 60 * 60 * 1000
+  const emergencyExitOpenAt = new Date(
+    startsAt.getTime() -
+      DISCIPLINARY_RULES.lateCancellationWindowMinutes * 60 * 1000
   );
 
-  if (now < lateCancelOpenAt) {
+  if (now < emergencyExitOpenAt) {
     throw new AppError(
-      "Puoi usare l’uscita di emergenza solo nelle 3 ore prima della partita",
+      "L’uscita di emergenza è disponibile soltanto nell’ultima ora prima della partita",
       400
     );
   }
@@ -579,68 +585,120 @@ function ensureLateCancellationWindowIsOpen(match) {
   }
 }
 
-async function requestLateCancellation({ userId, bookingId, reason }) {
+async function requestLateCancellation({
+  userId,
+  bookingId,
+  reason,
+}) {
   const cleanReason = String(reason || "").trim();
+
+  /*
+   * Manteniamo temporaneamente obbligatoria la motivazione.
+   * La relativa esperienza utente verrà rivalutata più avanti.
+   */
   if (cleanReason.length < 10) {
-    throw new AppError("Inserisci una motivazione di almeno 10 caratteri", 400);
+    throw new AppError(
+      "Inserisci una motivazione di almeno 10 caratteri",
+      400
+    );
   }
 
-  const booking = await bookingsRepository.findBookingById(bookingId);
-  if (!booking || booking.userId !== userId || booking.status !== "ACTIVE") {
+  const booking = await bookingsRepository.findBookingById(
+    bookingId
+  );
+
+  if (
+    !booking ||
+    booking.userId !== userId ||
+    booking.status !== "ACTIVE"
+  ) {
     throw new AppError("Operazione non valida", 400);
   }
 
   ensureLateCancellationWindowIsOpen(booking.match);
 
   const result = await prisma.$transaction(async (tx) => {
-    // Penalità: Solo punti affidabilità, niente soldi
-    const updatedUser = await tx.user.update({
-      where: { id: booking.userId },
-      data: { reliabilityScore: { decrement: LATE_CANCEL_PENALTY_POINTS } },
-      select: { id: true, name: true, email: true, reliabilityScore: true },
-    });
-
-    const penalty = await tx.penalty.create({
-      data: {
-        userId: booking.userId,
-        matchId: booking.matchId,
-        bookingId: booking.id,
-        type: "LATE_CANCEL",
-        points: -LATE_CANCEL_PENALTY_POINTS,
-        reason: "Uscita di emergenza nelle ultime 3 ore",
-      },
-    });
-
     const updatedBooking = await tx.booking.update({
-      where: { id: bookingId },
+      where: {
+        id: bookingId,
+      },
       data: {
         status: "LATE_CANCELLED",
         attendanceStatus: "LATE_CANCELLED",
-        depositStatus: "NONE", // Niente cauzione
+
+        /*
+         * Campo residuo del vecchio sistema della cauzione.
+         * Verrà eliminato nella migrazione dedicata.
+         */
+        depositStatus: "NONE",
       },
-      include: { match: true, user: true },
+      include: {
+        match: true,
+        user: true,
+      },
     });
 
-    // Aggiorna posti disponibili (logica invariata)
-    const newCurrentPlayers = Math.max(booking.match.currentPlayers - 1, 1);
-    const reservedEntry = await waitlistService.reserveNextWaitlistUser(booking.matchId, tx);
+    const yellowCardResult =
+      await disciplinaryCardsService.issueYellowCard({
+        recipientId: booking.userId,
+        matchId: booking.matchId,
+        bookingId: booking.id,
+        reason:
+          disciplinaryCardsService.CARD_REASONS
+            .LATE_CANCELLATION,
+        note: cleanReason,
+        db: tx,
+      });
+
+    const newCurrentPlayers = Math.max(
+      booking.match.currentPlayers - 1,
+      1
+    );
+
+    const reservedEntry =
+      await waitlistService.reserveNextWaitlistUser(
+        booking.matchId,
+        tx
+      );
+
     await tx.match.update({
-      where: { id: booking.matchId },
-      data: { currentPlayers: newCurrentPlayers, status: reservedEntry ? "FULL" : "OPEN" },
+      where: {
+        id: booking.matchId,
+      },
+      data: {
+        currentPlayers: newCurrentPlayers,
+        status: reservedEntry ? "FULL" : "OPEN",
+      },
     });
 
-    return { booking: updatedBooking, penalty, user: updatedUser, reservedEntry };
+    return {
+      booking: updatedBooking,
+      yellowCard: yellowCardResult.yellowCard,
+      redCard: yellowCardResult.redCard,
+      convertedToRed: yellowCardResult.convertedToRed,
+      reservedEntry,
+    };
   });
 
-  // Notifiche (Aggiornato il messaggio)
+  const notificationTitle = result.convertedToRed
+    ? "Cartellino rosso ricevuto"
+    : "Cartellino giallo ricevuto";
+
+  const notificationType = result.convertedToRed
+    ? "RED_CARD_RECEIVED"
+    : "YELLOW_CARD_RECEIVED";
+
+  const notificationMessage = result.convertedToRed
+    ? `Sei uscito dalla partita "${booking.match.title}" nell’ultima ora. Hai ricevuto il secondo cartellino giallo attivo, convertito automaticamente in cartellino rosso.`
+    : `Sei uscito dalla partita "${booking.match.title}" nell’ultima ora e hai ricevuto un cartellino giallo.`;
+
   await notificationsService.createNotification({
     userId: booking.userId,
-    type: "PENALTY_RECEIVED",
-    title: "Uscita di emergenza registrata",
-    message: `Sei uscito dalla partita "${booking.match.title}" nelle ultime 3 ore. Hai perso ${LATE_CANCEL_PENALTY_POINTS} punti affidabilità.`,
+    type: notificationType,
+    title: notificationTitle,
+    message: notificationMessage,
     matchId: booking.match.id,
     bookingId: booking.id,
-    penaltyId: result.penalty.id,
   });
 
   return result;
