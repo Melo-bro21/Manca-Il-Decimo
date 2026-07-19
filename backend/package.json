@@ -1,22 +1,32 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
+  "name": "manca-il-decimo-backend",
+  "version": "0.1.0",
+  "description": "Backend API di Manca il Decimo",
   "main": "src/server.js",
+  "private": true,
+  "type": "commonjs",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate",
-    "prisma:studio": "prisma studio"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
-  "keywords": [],
+  "dev": "nodemon src/server.js",
+  "start": "node src/server.js",
+  "db:health": "node scripts/db-healthcheck.js",
+  "prisma:validate": "prisma validate",
+  "prisma:format": "prisma format",
+  "prisma:generate": "prisma generate",
+  "prisma:migrate:status": "prisma migrate status",
+  "prisma:migrate:dev": "prisma migrate dev",
+  "prisma:migrate:deploy": "prisma migrate deploy",
+  "prisma:studio": "prisma studio",
+  "prisma:seed": "node prisma/seed.js"
+},
+  "keywords": [
+    "football",
+    "booking",
+    "ionic",
+    "postgresql",
+    "prisma"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
@@ -33,5 +43,9 @@
   "devDependencies": {
     "nodemon": "^3.1.14",
     "prisma": "^6.19.3"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
   }
 }

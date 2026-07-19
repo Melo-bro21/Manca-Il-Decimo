@@ -2,9 +2,7 @@ const { prisma } = require("../../shared/prisma");
 
 async function findAllFields() {
   return prisma.field.findMany({
-    orderBy: {
-      name: "asc",
-    },
+    orderBy: { name: "asc" },
     include: {
       sportsCenter: {
         select: {
@@ -12,7 +10,6 @@ async function findAllFields() {
           name: true,
           city: true,
           address: true,
-          distanceKm: true,
         },
       },
     },
@@ -21,9 +18,7 @@ async function findAllFields() {
 
 async function findFieldById(id) {
   return prisma.field.findUnique({
-    where: {
-      id,
-    },
+    where: { id },
     include: {
       sportsCenter: {
         select: {
@@ -31,7 +26,6 @@ async function findFieldById(id) {
           name: true,
           city: true,
           address: true,
-          distanceKm: true,
         },
       },
     },
@@ -40,12 +34,8 @@ async function findFieldById(id) {
 
 async function findFieldsBySportsCenterId(sportsCenterId) {
   return prisma.field.findMany({
-    where: {
-      sportsCenterId,
-    },
-    orderBy: {
-      name: "asc",
-    },
+    where: { sportsCenterId },
+    orderBy: { name: "asc" },
     include: {
       sportsCenter: {
         select: {
@@ -53,7 +43,6 @@ async function findFieldsBySportsCenterId(sportsCenterId) {
           name: true,
           city: true,
           address: true,
-          distanceKm: true,
         },
       },
     },
@@ -63,12 +52,8 @@ async function findFieldsBySportsCenterId(sportsCenterId) {
 async function findActiveMatchesByFieldIds(fieldIds) {
   return prisma.match.findMany({
     where: {
-      fieldId: {
-        in: fieldIds,
-      },
-      status: {
-        notIn: ["CANCELLED", "COMPLETED"],
-      },
+      fieldId: { in: fieldIds },
+      status: { notIn: ["CANCELLED", "COMPLETED"] },
     },
     select: {
       id: true,

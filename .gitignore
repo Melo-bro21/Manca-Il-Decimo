@@ -1,0 +1,103 @@
+# =========================================================
+# DIPENDENZE
+# =========================================================
+
+node_modules/
+**/node_modules/
+
+
+# =========================================================
+# VARIABILI D'AMBIENTE E CREDENZIALI
+# =========================================================
+
+.env
+.env.*
+!.env.example
+
+**/.env
+**/.env.*
+!**/.env.example
+
+
+# =========================================================
+# OUTPUT DI BUILD
+# =========================================================
+
+dist/
+www/
+coverage/
+out-tsc/
+.angular/
+.angular/cache/
+
+frontend/dist/
+frontend/www/
+frontend/coverage/
+frontend/out-tsc/
+frontend/.angular/
+
+backend/coverage/
+backend/src/generated/prisma/
+
+
+# =========================================================
+# FILE NATIVI GENERATI
+# Manteniamo tracciato il progetto Android, ma non le build.
+# =========================================================
+
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/build/
+frontend/android/build/
+
+frontend/ios/App/Pods/
+frontend/ios/App/App/public/
+frontend/ios/App/DerivedData/
+
+
+# =========================================================
+# LOG
+# =========================================================
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================================================
+# DATABASE LOCALI
+# PostgreSQL remoto non genera questi file, ma evitiamo
+# di versionare eventuali database SQLite residui.
+# =========================================================
+
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+
+# =========================================================
+# SISTEMA OPERATIVO
+# =========================================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+
+# =========================================================
+# EDITOR E IDE
+# =========================================================
+
+.idea/
+.vscode/
+.history/
+
+*.swp
+*.swo
+*.swn
+*.tmp
+*~

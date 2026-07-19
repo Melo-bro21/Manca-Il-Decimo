@@ -347,21 +347,6 @@
           </div>
 
           <div class="left-secondary-fields">
-            <div class="form-group">
-              <label>Cauzione richiesta</label>
-
-              <div class="select-box">
-                <select [(ngModel)]="form.deposit">
-                  <option
-                    *ngFor="let deposit of depositOptions"
-                    [ngValue]="deposit"
-                  >
-                    {{ deposit }}€
-                  </option>
-                </select>
-              </div>
-            </div>
-
             <div class="form-group form-group-last">
               <label>Descrizione (facoltativa)</label>
 

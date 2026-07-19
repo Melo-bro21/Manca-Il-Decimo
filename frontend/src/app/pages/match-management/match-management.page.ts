@@ -2,12 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
-  IonButton,
   IonContent,
   IonIcon,
-  IonInput,
   IonSelect,
   IonSelectOption,
   IonTextarea,
@@ -38,17 +36,14 @@ import {
   styleUrls: ['./match-management.page.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    IonContent,
-    IonIcon,
-    IonButton,
-    IonInput,
-    IonTextarea,
-    IonSelect,
-    IonSelectOption,
-  ],
+  CommonModule,
+  FormsModule,
+  IonContent,
+  IonIcon,
+  IonTextarea,
+  IonSelect,
+  IonSelectOption,
+],
 })
 export class MatchManagementPage {
   matchId = 0;

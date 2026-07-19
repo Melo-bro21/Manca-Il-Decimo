@@ -1,0 +1,20 @@
+{
+  "name": "manca-il-decimo",
+  "version": "0.1.0",
+  "description": "Workspace principale di Manca il Decimo",
+  "private": true,
+  "scripts": {
+    "install:all": "npm ci --prefix backend && npm ci --prefix frontend",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run start",
+    "build:frontend": "npm --prefix frontend run build",
+    "prisma:validate": "npm --prefix backend run prisma:validate",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:studio": "npm --prefix backend run prisma:studio",
+    "check": "npm run prisma:validate && npm run build:frontend"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  }
+}

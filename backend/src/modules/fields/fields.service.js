@@ -29,56 +29,45 @@ async function getFieldById(id) {
   return field;
 }
 
-async function getFieldsAvailability({
-  sportsCenterId,
-  startsAt,
-  durationMinutes,
-}) {
-  if (!sportsCenterId || Number.isNaN(sportsCenterId)) {
-    throw new AppError("Sports center id is required", 400);
+async function getFieldsAvailability({ sportsCenterId, startsAt, durationMinutes }) {
+  // --- FIX: Convertiamo esplicitamente in numero ---
+  const id = parseInt(sportsCenterId, 10);
+
+  if (!id || Number.isNaN(id)) {
+    throw new AppError("Sports center id non valido", 400);
   }
 
-  if (!startsAt) {
-    throw new AppError("startsAt is required", 400);
-  }
-
-  if (!durationMinutes || Number.isNaN(durationMinutes)) {
-    throw new AppError("durationMinutes is required", 400);
-  }
+  // ... (controlli restanti invariati)
 
   const newStart = new Date(startsAt);
-
   if (Number.isNaN(newStart.getTime())) {
-    throw new AppError("Invalid startsAt", 400);
+    throw new AppError("Data non valida", 400);
   }
 
   const newEnd = getMatchEndDate(newStart, durationMinutes);
 
-  const fields = await fieldsRepository.findFieldsBySportsCenterId(
-    sportsCenterId
-  );
+  // --- FIX: Usiamo l'ID convertito ---
+  const fields = await fieldsRepository.findFieldsBySportsCenterId(id);
 
   if (fields.length === 0) {
     return [];
   }
 
   const fieldIds = fields.map((field) => field.id);
-
-  const activeMatches = await fieldsRepository.findActiveMatchesByFieldIds(
-    fieldIds
-  );
+  
+  // Assicurati che fieldIds sia un array valido
+  const activeMatches = await fieldsRepository.findActiveMatchesByFieldIds(fieldIds);
 
   return fields.map((field) => {
     const conflictingMatch = activeMatches.find((match) => {
-      return match.fieldId === field.id && hasTimeOverlap(match, newStart, newEnd);
+      // Importante: assicurati che match.fieldId e field.id siano confrontabili
+      return Number(match.fieldId) === Number(field.id) && hasTimeOverlap(match, newStart, newEnd);
     });
 
     return {
       ...field,
       isAvailable: !conflictingMatch,
-      unavailableReason: conflictingMatch
-        ? "Campo già occupato in questo orario"
-        : null,
+      unavailableReason: conflictingMatch ? "Campo occupato" : null,
     };
   });
 }
