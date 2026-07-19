@@ -3,6 +3,9 @@ const { AppError } = require("../../shared/errors");
 const waitlistRepository = require("./waitlist.repository");
 const notificationsService = require("../notifications/notifications.service");
 const suspensionService = require("../../shared/suspension.service");
+const disciplinaryCardsService = require(
+  "../disciplinary-cards/disciplinary-cards.service"
+);
 
 const RESERVED_SPOT_MINUTES = 60;
 
@@ -20,6 +23,10 @@ function isReservedEntryExpired(waitlistEntry) {
 
 async function joinWaitlist({ userId, matchId }) {
   await suspensionService.ensureUserCanUseMatchFeatures(userId);
+
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+    userId
+  );
 
   const match = await waitlistRepository.findMatchById(matchId);
 
@@ -341,6 +348,10 @@ async function getMyWaitlist(userId) {
 
 async function confirmPresence({ userId, waitlistEntryId }) {
   await suspensionService.ensureUserCanUseMatchFeatures(userId);
+
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+    userId
+  );
 
   const waitlistEntry = await waitlistRepository.findWaitlistEntryById(
     waitlistEntryId
