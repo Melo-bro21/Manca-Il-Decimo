@@ -6,6 +6,9 @@ const { AppError } = require("../../shared/errors");
 const { prisma } = require("../../shared/prisma");
 const suspensionService = require("../../shared/suspension.service");
 const stripeService = require('../../shared/stripe.service');
+const disciplinaryCardsService = require(
+  "../disciplinary-cards/disciplinary-cards.service"
+);
 
 const MAX_GOALKEEPERS_PER_MATCH = 2;
 const LATE_CANCEL_PENALTY_POINTS = 3;
@@ -236,6 +239,10 @@ async function getOrCreateWallet(tx, userId) {
 
 async function joinMatch({ userId, matchId }) {
   await suspensionService.ensureUserCanUseMatchFeatures(userId);
+
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+    userId
+  );
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
