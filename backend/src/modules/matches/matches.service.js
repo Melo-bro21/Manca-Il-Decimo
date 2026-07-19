@@ -3,6 +3,9 @@ const notificationsService = require("../notifications/notifications.service");
 const { prisma } = require("../../shared/prisma");
 const { AppError } = require("../../shared/errors");
 const suspensionService = require("../../shared/suspension.service");
+const disciplinaryCardsService = require(
+  "../disciplinary-cards/disciplinary-cards.service"
+);  
 
 const MAX_GOALKEEPERS_PER_MATCH = 2;
 
@@ -149,6 +152,10 @@ async function getMatchById(id) {
 
 async function createMatch({ creatorId, matchData }) {
   await suspensionService.ensureUserCanUseMatchFeatures(creatorId);
+
+  await disciplinaryCardsService.ensureUserHasNoActiveRedCard(
+    creatorId
+  );
 
   const {
     title,
